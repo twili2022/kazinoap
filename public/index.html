@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>KazinoAP</title>
+<style>
+/* ========== БАЗА И ЗЕЛЁНЫЙ НЕОНОВЫЙ 3D-СТИЛЬ ========== */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#040d08;
+  --card:#0a1d13;
+  --card-2:#0f291b;
+  --card-3:#153825;
+  --border:#1e5638;
+  --border-soft:#2b734c;
+  --text:#f0fdf4;
+  --dim:#8ec5a6;
+  --accent:#22c55e;
+  --accent-bright:#4ade80;
+  --accent-dk:#15803d;
+  --cyan:#34d399;
+  --gold:#a3e635;
+  --ok:#10b981;
+  --bad:#ef4444;
+  --neon-border: 0 0 0 1px rgba(74, 222, 128, 0.45), 0 0 14px rgba(34, 197, 94, 0.28);
+  --neon-strong: 0 0 0 1px rgba(134, 239, 172, 0.72), 0 0 20px rgba(34, 197, 94, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  --depth-shadow: 0 10px 24px rgba(0, 0, 0, 0.72), 0 4px 0 #030a06;
+}
+html,body{height:100%; overflow:hidden; overscroll-behavior:none;}
+body{
+  font-family:'Segoe UI',Roboto,-apple-system,sans-serif;
+  color:var(--text); height:100vh; height:100dvh;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(34, 197, 94, 0.22), transparent 44%),
+    radial-gradient(circle at 88% 22%, rgba(16, 185, 129, 0.15), transparent 40%),
+    radial-gradient(circle at 50% 88%, rgba(163, 230, 53, 0.12), transparent 46%),
+    var(--bg);
+  display:flex; flex-direction:column;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(4,13,8,0.3) 0%, rgba(4,13,8,0.8) 100%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ВАЖНО: min-height:0 + overflow-y:auto = рабочий скролл внутри экрана */
+.page-screen {
+  display: none; flex-direction: column; height: 100%; min-height: 0;
+  overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
+}
+.page-screen.active { display: flex; }
+
+/* ========== ШАПКА ========== */
+header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 0; background:transparent; flex-shrink: 0;
+}
+.logo-container { display:flex; align-items:center; gap:11px; }
+.logo-icon {
+  width:42px; height:42px;
+  background: linear-gradient(145deg, var(--accent-bright), var(--accent-dk));
+  border-radius:12px; display:flex; align-items:center; justify-content:center;
+  color:#041209; font-weight:900; font-size:16px;
+  border: 1px solid rgba(187,247,208,0.45);
+  box-shadow: 0 5px 0 #052e16, 0 0 18px rgba(74, 222, 128, 0.55);
+}
+.logo-text { display:flex; flex-direction:column; line-height:1.1; }
+.logo-title {
+  font-size:19px; font-weight:900; letter-spacing:0.5px; color:#fff;
+  text-shadow: 0 0 12px rgba(74, 222, 128, 0.45);
+}
+.logo-title span { color: var(--accent-bright); text-shadow: 0 0 14px var(--accent); }
+.logo-sub { font-size:9px; color:var(--dim); text-transform:uppercase; letter-spacing:1.2px; }
+
+.top-actions { display:flex; align-items:center; gap:8px; }
+.balance-pill {
+  display:flex; align-items:center; gap:6px;
+  background: linear-gradient(160deg, var(--card-3), var(--card-2));
+  padding:7px 13px; border-radius:20px; font-weight:800; font-size:13px;
+  border:1px solid var(--border-soft); cursor:pointer;
+  box-shadow: 0 4px 0 #030a06, var(--neon-border);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.balance-pill:active { transform: translateY(2px); box-shadow: 0 2px 0 #030a06, var(--neon-strong); }
+
+/* ========== ГЛАВНЫЙ ЭКРАН ========== */
+#screen-games { padding-left: 16px; padding-right: 16px; }
+.hero-banner { position:relative; padding: 18px 0 14px; }
+.hero-subtitle {
+  color:var(--accent-bright); font-size:11px; font-weight:800; letter-spacing:2px;
+  text-transform:uppercase; margin-bottom:7px; display:inline-flex; align-items:center; gap:7px;
+  padding: 5px 10px; border-radius: 999px;
+  background: rgba(34, 197, 94, 0.14);
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.28);
+}
+.hero-title {
+  font-size:48px; font-weight:900; line-height:0.94; letter-spacing:-1.5px;
+  text-transform:uppercase; margin-bottom:14px; color:#fff;
+  text-shadow: 0 4px 0 #052e16, 0 10px 24px rgba(0,0,0,0.88), 0 0 18px rgba(74,222,128,0.32);
+}
+.hero-title span {
+  color:var(--accent-bright); display:block; font-size:52px; letter-spacing:-1.5px;
+  text-shadow: 0 4px 0 #052e16, 0 12px 26px rgba(0,0,0,0.92), 0 0 22px rgba(74,222,128,0.68);
+}
+.online-dot {
+  width:7px; height:7px; background:var(--accent-bright); border-radius:50%;
+  box-shadow:0 0 8px var(--accent-bright), 0 0 14px var(--accent);
+}
+
+.live-table-card {
+  background: linear-gradient(155deg, #133322 0%, #0a1d13 55%, #06130c 100%);
+  border-radius:24px; padding:20px;
+  border:1px solid rgba(74, 222, 128, 0.52);
+  margin-bottom:20px; position:relative; overflow:hidden;
+  box-shadow: var(--depth-shadow), var(--neon-strong);
+}
+.live-table-card::before {
+  content:''; position:absolute; top:-45px; right:-35px; width:140px; height:140px;
+  background: radial-gradient(circle, rgba(74,222,128,0.28), transparent 70%);
+  pointer-events:none;
+}
+.live-table-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.live-tag {
+  background:rgba(74,222,128,0.16); color:var(--accent-bright);
+  font-size:10px; font-weight:800; padding:5px 10px; border-radius:8px;
+  border:1px solid rgba(74,222,128,0.55); text-transform:uppercase; letter-spacing:1.2px;
+  box-shadow: 0 0 12px rgba(74,222,128,0.35);
+}
+.multiplier-big {
+  font-size:32px; font-weight:900; color:#fff; line-height:1.05; margin-bottom:6px;
+  text-shadow: 0 3px 0 #052e16, 0 0 16px rgba(74,222,128,0.35);
+}
+
+.section-title {
+  font-size:14px; font-weight:900; text-transform:uppercase; letter-spacing:1.2px;
+  margin-bottom:14px; color:var(--accent-bright); display:flex; align-items:center; gap:9px;
+  text-shadow: 0 0 12px rgba(74,222,128,0.4);
+}
+.section-title::before {
+  content:''; display:block; width:5px; height:17px;
+  background: linear-gradient(180deg, var(--accent-bright), var(--accent-dk));
+  border-radius:3px; box-shadow: 0 0 10px var(--accent);
+}
+
+.arsenal-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; padding-bottom:20px; }
+.arsenal-card {
+  background: linear-gradient(160deg, #123120 0%, #0a1b12 100%);
+  border:1px solid rgba(74, 222, 128, 0.46);
+  border-radius:24px; padding:20px 16px; position:relative; cursor:pointer;
+  overflow:hidden; transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  box-shadow: var(--depth-shadow), var(--neon-border);
+}
+.arsenal-card:hover {
+  border-color: rgba(134, 239, 172, 0.85);
+  box-shadow: var(--depth-shadow), var(--neon-strong);
+}
+.arsenal-card:active {
+  transform:translateY(3px) scale(0.985);
+  box-shadow: 0 3px 0 #030a06, var(--neon-strong);
+}
+.arsenal-card::after {
+  content:''; position:absolute; right:-24px; bottom:-24px; width:96px; height:96px;
+  background:radial-gradient(circle, rgba(74,222,128,0.24), transparent 70%);
+  border-radius:50%; z-index:0; pointer-events:none;
+}
+.arsenal-badge {
+  display:inline-block; background:rgba(74,222,128,0.16); color:var(--accent-bright);
+  font-size:9.5px; font-weight:800; padding:4px 9px; border-radius:7px;
+  border:1px solid rgba(74,222,128,0.45); margin-bottom:24px; position:relative; z-index:1;
+  box-shadow: 0 0 10px rgba(74,222,128,0.25);
+}
+.arsenal-title {
+  font-size:22px; font-weight:900; text-transform:uppercase; line-height:1.05;
+  margin-bottom:6px; position:relative; z-index:1;
+  text-shadow: 0 3px 0 #052e16, 0 0 12px rgba(74,222,128,0.3);
+}
+.arsenal-desc { font-size:11.5px; color:var(--dim); font-weight:600; position:relative; z-index:1; }
+.arsenal-icon-bg {
+  position:absolute; right:10px; bottom:8px; font-size:62px; opacity:0.16; z-index:0;
+  transform:rotate(-14deg); filter: drop-shadow(0 0 10px rgba(74,222,128,0.45));
+}
+
+/* ========== ЛЕНТА ДРОПОВ ========== */
+.drop-ticker {
+  background:rgba(5, 15, 9, 0.88); border-radius:15px; padding:13px 0;
+  overflow:hidden; margin-top:14px; border:1px solid rgba(74,222,128,0.44);
+  position:relative; display:flex; align-items:center;
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.65), 0 0 12px rgba(34,197,94,0.24);
+}
+.drop-ticker-title {
+  background:linear-gradient(145deg, var(--card-3), var(--card-2));
+  padding:6px 11px; border-radius:9px; font-size:10px; font-weight:800;
+  color:var(--accent-bright); text-transform:uppercase; margin-left:12px; z-index:2;
+  border:1px solid rgba(74,222,128,0.5); flex-shrink:0;
+  box-shadow: 0 3px 0 #030a06, 0 0 10px rgba(74,222,128,0.3);
+}
+.drop-ticker-track { display:flex; gap:28px; white-space:nowrap; animation: ticker 26s linear infinite; padding-left:16px; will-change: transform; }
+.drop-item { display:flex; align-items:center; gap:7px; font-size:13px; font-weight:700; }
+.drop-item img { width:26px; height:26px; object-fit:contain; }
+.drop-item .f-icon span { font-size:22px; }
+.drop-item .user { color:var(--accent-bright); font-weight:800; }
+.drop-item .item-name { color:var(--text); }
+.drop-item .price { color:var(--gold); margin-left:2px; font-weight:900; text-shadow: 0 0 8px rgba(163,230,53,0.38); }
+@keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+/* ========== ИГРОВЫЕ ЭКРАНЫ ========== */
+.game-header { display:flex; align-items:center; gap:14px; margin-bottom:18px; padding: 15px 16px 0; }
+.back-btn {
+  width:42px; height:42px;
+  background:linear-gradient(155deg, var(--card-3), var(--card-2));
+  border-radius:13px; border:1px solid rgba(74,222,128,0.5);
+  display:flex; align-items:center; justify-content:center; font-size:18px;
+  cursor:pointer; color:#fff;
+  box-shadow: 0 4px 0 #030a06, var(--neon-border);
+}
+.back-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #030a06, var(--neon-strong); }
+.game-title-h1 {
+  font-size:21px; font-weight:900; text-transform:uppercase;
+  text-shadow: 0 3px 0 #052e16, 0 0 14px rgba(74,222,128,0.42);
+}
+.game-content { padding: 0 16px; }
+
+/* ========== МИНЫ ========== */
+.mines-top-bar {
+  display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;
+  background:linear-gradient(155deg, var(--card-2), var(--card));
+  padding:13px; border-radius:18px; border:1px solid rgba(74,222,128,0.45);
+  box-shadow: var(--depth-shadow), var(--neon-border);
+}
+.mines-stat { text-align:center; }
+.mines-stat .l { font-size:10px; color:var(--dim); font-weight:700; text-transform:uppercase; }
+.mines-stat .v { font-size:16px; font-weight:900; color:var(--accent-bright); text-shadow: 0 0 10px rgba(74,222,128,0.45); }
+.mines-grid { display:grid; gap:7px; margin:15px 0; justify-content: center; }
+.mine-cell {
+  background:linear-gradient(155deg, var(--card-3), var(--card-2));
+  border:1px solid rgba(74,222,128,0.45); border-radius:12px;
+  display:flex; align-items:center; justify-content:center; font-size:24px;
+  cursor:pointer; aspect-ratio: 1; min-width: 42px; min-height: 42px;
+  box-shadow: 0 4px 0 #030a06, 0 0 10px rgba(34,197,94,0.22);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.mine-cell:active { transform: translateY(2px); box-shadow: 0 2px 0 #030a06, var(--neon-strong); }
+.mine-cell.opened {
+  background:linear-gradient(155deg, #166534, #0a351b);
+  border-color: var(--accent-bright);
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.6), 0 0 14px rgba(74,222,128,0.5);
+  pointer-events:none;
+}
+.mine-cell.bomb {
+  background:linear-gradient(155deg, #ef4444, #991b1b);
+  border-color: #fca5a5;
+  box-shadow: 0 4px 0 #450a0a, 0 0 18px rgba(239,68,68,0.7);
+}
+
+/* ========== КЕЙСЫ ========== */
+.cases-grid { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+.case-card {
+  background:linear-gradient(160deg, var(--card-2), var(--card));
+  border:1px solid rgba(74,222,128,0.45); border-radius:22px;
+  padding:20px 10px; text-align:center; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center;
+  box-shadow: var(--depth-shadow), var(--neon-border);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.case-card:active { transform:translateY(3px); box-shadow:0 3px 0 #030a06, var(--neon-strong); }
+.case-card .c-icon { width:96px; height:96px; margin-bottom:10px; display:flex; justify-content:center; align-items:center; filter: drop-shadow(0 0 12px rgba(74,222,128,0.35)); }
+.case-card .c-name { font-size:15px; font-weight:900; }
+.case-card .c-price { color:var(--accent-bright); font-weight:800; margin-top:5px; font-size:13px; text-shadow: 0 0 10px rgba(74,222,128,0.45); }
+
+#caseRoller { display:none; margin-top:20px; }
+.roulette-container{
+  width:100%; height:104px;
+  background:linear-gradient(160deg, var(--card-2), var(--card));
+  border:1px solid rgba(74,222,128,0.6); position:relative; overflow:hidden;
+  display:flex; align-items:center; border-radius:16px;
+  box-shadow: var(--depth-shadow), var(--neon-strong);
+}
+.roulette-strip{display:flex; position:absolute; left:0; will-change:transform}
+.roulette-item{ width:80px; height:104px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-right:1px solid rgba(74,222,128,0.22); flex-shrink:0; }
+.roulette-item .r-img { width:40px; height:40px; display:flex; align-items:center; justify-content:center; }
+.roulette-item .r-img img { max-width:100%; max-height:100%; object-fit:contain; }
+.roulette-item .r-name { font-size:9px; color:var(--dim); margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; text-align:center; }
+.roulette-pointer{ position:absolute; left:50%; top:0; bottom:0; width:4px; background:var(--accent-bright); transform:translateX(-50%); z-index:10; box-shadow:0 0 16px var(--accent), 0 0 26px var(--accent-bright); }
+
+/* ========== АПГРЕЙД ========== */
+.upgrade-container { display: flex; flex-direction: column; align-items: center; padding: 16px 0; }
+.upg-circle-wrap { position: relative; width: 244px; height: 244px; margin-bottom: 18px; filter: drop-shadow(0 0 18px rgba(74,222,128,0.34)); }
+.upg-svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+.upg-svg-bg { fill: none; stroke: rgba(74,222,128,0.14); stroke-width: 15; }
+.upg-svg-win { fill: none; stroke: var(--accent-bright); stroke-width: 15; stroke-linecap: butt; filter: drop-shadow(0 0 12px rgba(74,222,128,0.95)); transition: stroke-dashoffset 0.3s ease, stroke-dasharray 0.3s ease; }
+#upgCenterItem { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 2; }
+#upgCenterItem img { max-width: 70px; max-height: 70px; filter: drop-shadow(0 0 15px rgba(187,247,208,0.7)); }
+#upgPointer { position: absolute; top: 50%; left: 50%; width: 8px; height: 96px; background: linear-gradient(to top, rgba(74,222,128,0.15), #bbf7d0, var(--accent-bright)); transform-origin: bottom center; transform: translate(-50%, -100%) rotate(0deg); z-index: 5; border-radius: 8px; pointer-events: none; box-shadow: 0 0 16px var(--accent); }
+#upgPointer::after { content: ''; position: absolute; top: -10px; left: -6px; width: 20px; height: 20px; background: #dcfce7; border-radius: 50%; box-shadow: 0 0 20px var(--accent-bright); }
+.spinning { transition: transform 4.5s cubic-bezier(0.15, 0.85, 0.3, 1); }
+
+.upgrade-slots { display: flex; gap: 14px; width: 100%; margin-bottom: 15px; }
+.slot-card {
+  flex: 1; background: linear-gradient(155deg, var(--card-2), var(--card));
+  border: 1px solid rgba(74,222,128,0.45); border-radius: 18px;
+  padding: 15px 10px; text-align: center; cursor: pointer;
+  box-shadow: 0 5px 0 #030a06, var(--neon-border);
+}
+.slot-card.active { border-color: var(--accent-bright); box-shadow: 0 5px 0 #030a06, var(--neon-strong); }
+.slot-card .s-label { font-size: 10px; color: var(--dim); margin-bottom: 5px; font-weight: 700; text-transform: uppercase; }
+.slot-card .s-content { font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 5px; }
+
+.items-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; width: 100%; margin-bottom: 18px; max-height: 200px; overflow-y: auto; padding-right: 4px; }
+.item-card {
+  background: linear-gradient(155deg, var(--card-2), var(--card));
+  border: 1px solid rgba(74,222,128,0.35); border-radius: 14px;
+  padding: 10px; text-align: center; cursor: pointer;
+  box-shadow: 0 4px 0 #030a06;
+}
+.item-card.selected { border-color: var(--accent-bright); background: rgba(74,222,128,0.16); box-shadow: 0 4px 0 #030a06, var(--neon-strong); }
+.item-card .ic-icon { margin-bottom: 5px; height: 30px; }
+.item-card .ic-name { font-size: 10px; font-weight: 700; color: #dcfce7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-card .ic-price { font-size: 10px; color: var(--accent-bright); font-weight: 800; }
+.item-card .ic-mult { font-size: 9px; color: var(--gold); font-weight: 800; margin-top: 2px; }
+
+.upg-chance-text { text-align: center; margin-bottom: 14px; font-size: 16px; font-weight: 900; color:var(--dim); }
+.upg-chance-text span { color: var(--accent-bright); font-size:21px; text-shadow: 0 0 12px rgba(74,222,128,0.65); }
+
+/* ========== НИЖНЯЯ НАВИГАЦИЯ ========== */
+.bottom-nav {
+  position: fixed; left: 10px; right: 10px; bottom: 8px; z-index: 120;
+  display: flex; justify-content: space-around;
+  padding: 9px 8px calc(9px + env(safe-area-inset-bottom));
+  background: rgba(8, 24, 15, 0.92); backdrop-filter: blur(20px);
+  border: 1px solid rgba(74, 222, 128, 0.55); border-radius: 22px;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.88), var(--neon-strong);
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; padding: 7px 12px; border-radius: 15px; cursor: pointer;
+  border: 1px solid transparent; background: transparent; color: var(--dim);
+  font-size: 10px; font-weight: 700; font-family: inherit;
+  transition: all 0.15s ease;
+}
+.nav-item .ni { font-size: 20px; }
+.nav-item.active {
+  color: var(--accent-bright);
+  background: rgba(74, 222, 128, 0.15);
+  border-color: rgba(74, 222, 128, 0.5);
+  box-shadow: 0 0 14px rgba(74, 222, 128, 0.35);
+}
+
+/* ========== КНОПКИ И ПОЛЯ ========== */
+.btn-main {
+  width:100%; padding:15px; border:1px solid rgba(187,247,208,0.45);
+  border-radius:16px;
+  background:linear-gradient(145deg, var(--accent-bright), var(--accent));
+  color:#041209; font-weight:900; font-size:14.5px; cursor:pointer;
+  text-transform:uppercase; letter-spacing:1px;
+  box-shadow: 0 5px 0 #052e16, 0 0 18px rgba(74,222,128,0.45);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.btn-main:hover { box-shadow: 0 5px 0 #052e16, 0 0 24px rgba(74,222,128,0.72); }
+.btn-main:active { transform:translateY(3px); box-shadow: 0 2px 0 #052e16, 0 0 16px rgba(74,222,128,0.6); }
+.btn-main:disabled { opacity:0.5; }
+.btn-grey {
+  background:linear-gradient(155deg, var(--card-3), var(--card-2));
+  color:#fff; border:1px solid rgba(74,222,128,0.42);
+  font-size:13px; padding:12px; border-radius:13px; font-weight:700;
+  cursor:pointer; box-shadow: 0 4px 0 #030a06, 0 0 10px rgba(34,197,94,0.2);
+}
+.btn-grey:active { transform:translateY(2px); box-shadow: 0 2px 0 #030a06; }
+
+/* ========== МОДАЛКИ ========== */
+.modal{ display:none; position:fixed; inset:0; background:rgba(2,8,4,0.86); backdrop-filter:blur(7px); align-items:center; justify-content:center; z-index:300; padding:14px; }
+.modal.show{display:flex;}
+.modal .box{
+  background:linear-gradient(160deg, var(--card-2), var(--card));
+  border:1px solid rgba(74,222,128,0.6); border-radius:24px;
+  padding:22px 18px; width:100%; max-width:400px; max-height:90vh; overflow-y:auto;
+  box-shadow: var(--depth-shadow), var(--neon-strong);
+}
+input[type="text"], input[type="number"], input[type="password"] {
+  width:100%; padding:13px 14px; background:rgba(5, 16, 10, 0.88);
+  border:1px solid rgba(74,222,128,0.42); border-radius:13px;
+  color:#fff; font-size:15px; margin-bottom:12px; outline:none;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.65), 0 0 10px rgba(34,197,94,0.16);
+}
+input:focus {
+  border-color: var(--accent-bright);
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.65), 0 0 14px rgba(74,222,128,0.48);
+}
+
+/* Ползунки громкости */
+.vol-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(5, 16, 10, 0.92);
+  border: 1px solid rgba(74,222,128,0.45);
+  box-shadow: 0 0 10px rgba(34,197,94,0.3);
+  outline: none;
+  margin-top: 8px;
+}
+.vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #fff, var(--accent-bright));
+  border: 2px solid var(--accent-dk);
+  box-shadow: 0 0 14px var(--accent);
+  cursor: pointer;
+}
+
+#toastContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display:flex; flex-direction:column; gap:10px; pointer-events:none; width: 90%; max-width: 400px; }
+.toast {
+  background: linear-gradient(145deg, #f0fdf4, #dcfce7);
+  color: #041209; padding: 12px 20px; border-radius: 14px;
+  font-weight: 800; font-size: 13px; text-align: center;
+  border: 1px solid var(--accent-bright);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.5), 0 0 18px rgba(74,222,128,0.65);
+  animation: fadeInOut 3s forwards;
+}
+@keyframes fadeInOut { 0% { opacity: 0; transform: translateY(-10px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Инвентарь, Кошелёк, Настройки, Админка */
+.inventory{display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:11px; padding:0 16px;}
+.item{
+  background:linear-gradient(155deg, var(--card-2), var(--card));
+  border:1px solid rgba(74,222,128,0.42); border-radius:17px;
+  padding:11px 8px 9px; text-align:center;
+  box-shadow: 0 5px 0 #030a06, 0 0 12px rgba(34,197,94,0.22);
+}
+.item .ii { height: 34px; display: flex; align-items: center; justify-content: center; margin-bottom: 5px; }
+.item .ii img { width:34px; height:34px; object-fit:contain; }
+.item .iname{font-size:10.5px; font-weight:700;}
+.item .iprice{color:var(--accent-bright); font-size:10.5px; font-weight:800; margin-top:2px;}
+.item button{
+  width:100%; padding:6px; border:none; border-radius:8px;
+  color:#041209; font-weight:800; margin-top:7px; cursor:pointer;
+  font-size:10px; background:linear-gradient(145deg, var(--accent-bright), var(--accent));
+  box-shadow: 0 3px 0 #052e16;
+}
+
+.wallet-card, .settings-card {
+  background:linear-gradient(155deg, var(--card-2), var(--card));
+  border:1px solid rgba(74,222,128,0.48); border-radius:20px;
+  padding:18px; margin-bottom:15px;
+  box-shadow: var(--depth-shadow), var(--neon-border);
+}
+.wallet-card h3, .settings-card h3 {
+  font-size:13.5px; font-weight:800; margin-bottom:12px;
+  color:var(--accent-bright); text-transform:uppercase; letter-spacing:0.8px;
+  text-shadow: 0 0 10px rgba(74,222,128,0.35);
+}
+.admin-box {
+  background:linear-gradient(155deg, var(--card-2), var(--card));
+  padding:16px; border-radius:18px; margin-bottom:15px;
+  border:1px solid rgba(74,222,128,0.48);
+  box-shadow: var(--depth-shadow), var(--neon-border);
+}
+.admin-box h3 { font-size:12.5px; color:var(--accent-bright); margin-bottom:11px; text-transform:uppercase; letter-spacing:0.8px; }
+.admin-box button {
+  padding:11px; border:1px solid rgba(187,247,208,0.35); border-radius:12px;
+  font-weight:800; cursor:pointer; color:#041209;
+  background:linear-gradient(145deg, var(--accent-bright), var(--accent));
+  margin-top:6px; width:100%; box-shadow: 0 4px 0 #052e16, 0 0 12px rgba(74,222,128,0.35);
+}
+</style>
+</head>
+<body>
+
+<div id="toastContainer"></div>
+
+<!-- ЭКРАН АВТОРИЗАЦИИ -->
+<div id="authScreen" class="page-screen active" style="justify-content:center; align-items:center; padding:20px;">
+  <div style="text-align:center; margin-bottom:22px;">
+    <div class="logo-icon" style="margin:0 auto 12px; width:64px; height:64px; font-size:24px;">KAP</div>
+    <h1 style="font-size:30px; font-weight:900; text-transform:uppercase; text-shadow:0 4px 0 #052e16, 0 0 18px rgba(74,222,128,0.45);">Kazino<span style="color:var(--accent-bright)">AP</span></h1>
+  </div>
+  <div style="width:100%; max-width:360px; background:linear-gradient(160deg, var(--card-2), var(--card)); padding:24px 20px; border-radius:24px; border:1px solid rgba(74,222,128,0.55); box-shadow:var(--depth-shadow), var(--neon-strong);">
+    <h2 id="authTitle" style="text-align:center; margin-bottom:18px; font-size:18px; text-transform:uppercase; color:var(--accent-bright);">Вход</h2>
+    <input type="text" id="authLogin" placeholder="Логин">
+    <input type="password" id="authPassword" placeholder="Пароль">
+    <button class="btn-main" id="mainAuthBtn" style="margin-top:8px;">Войти</button>
+    <button class="btn-grey" id="switchAuthMode" style="width:100%; margin-top:11px; font-size:13px;">Нет аккаунта? Регистрация</button>
+  </div>
+</div>
+
+<!-- ГЛАВНАЯ -->
+<div id="screen-games" class="page-screen">
+  <header>
+    <div class="logo-container">
+      <div class="logo-icon">KAP</div>
+      <div class="logo-text">
+        <div class="logo-title">Kazino<span>AP</span></div>
+        <div class="logo-sub">Online Casino</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="balance-pill" onclick="openProfile()"><span style="color:var(--accent-bright); text-shadow:0 0 8px var(--accent);">★</span> <span id="uiBalanceTop">0</span></div>
+    </div>
+  </header>
+
+  <div class="hero-banner">
+    <div class="hero-subtitle"><div class="online-dot"></div> Live Table</div>
+    <div class="hero-title">Лови куш<br><span>На максимуме</span></div>
+  </div>
+
+  <div class="live-table-card">
+    <div class="live-table-header">
+      <div class="live-tag">ДРОП ЛАЙВ</div>
+    </div>
+    <div class="multiplier-big">Топ дропы</div>
+    <div class="drop-ticker">
+      <div class="drop-ticker-title">Дропы</div>
+      <div class="drop-ticker-track" id="liveDropTrack">
+          <div class="drop-item"><span class="user">Загрузка...</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Арсенал</div>
+  <div class="arsenal-grid">
+    <div class="arsenal-card" onclick="openGame('mines')">
+      <div class="arsenal-badge">48% • x2</div>
+      <div class="arsenal-title">Мины</div>
+      <div class="arsenal-desc">Поле 3x3 • 5 режимов</div>
+      <div class="arsenal-icon-bg">💣</div>
+    </div>
+    <div class="arsenal-card" onclick="openGame('cases')">
+      <div class="arsenal-badge">6 кейсов</div>
+      <div class="arsenal-title">Кейсы</div>
+      <div class="arsenal-desc">Крути и забирай</div>
+      <div class="arsenal-icon-bg">🎁</div>
+    </div>
+    <div class="arsenal-card" onclick="openGame('upgrade')" style="grid-column: span 2;">
+      <div class="arsenal-badge">До x50</div>
+      <div class="arsenal-title">Апгрейд</div>
+      <div class="arsenal-desc">Повышай ставки и срывай куш</div>
+      <div class="arsenal-icon-bg">⚡</div>
+    </div>
+  </div>
+</div>
+
+<!-- МИНЫ -->
+<div id="screen-mines" class="page-screen">
+  <div class="game-header">
+    <div class="back-btn" onclick="switchTab('games')">←</div>
+    <div class="game-title-h1">Мины</div>
+  </div>
+  <div class="game-content">
+    <div class="mines-top-bar">
+      <div class="mines-stat"><div class="l">Мин</div><div class="v" id="minesCountLbl">3</div></div>
+      <div class="mines-stat"><div class="l">Поле</div><div class="v" id="minesGridSizeLbl">3x3</div></div>
+      <div class="mines-stat"><div class="l">Множитель</div><div class="v" id="minesMultLbl">1.0x</div></div>
+    </div>
+
+    <div id="minesSetup" style="background:linear-gradient(155deg, var(--card-2), var(--card)); padding:16px; border-radius:18px; border:1px solid rgba(74,222,128,0.45); margin-bottom:15px; box-shadow:var(--depth-shadow), var(--neon-border);">
+      <input type="number" id="minesBetInput" placeholder="Ставка (★)" value="100" style="background:rgba(5,16,10,0.88); margin-bottom:10px;">
+      <div style="display:flex; gap:6px; margin-bottom:12px;">
+        <button class="btn-grey" onclick="setMines(1)" style="padding:10px; flex:1;">1</button>
+        <button class="btn-grey" onclick="setMines(3)" style="padding:10px; flex:1;">3</button>
+        <button class="btn-grey" onclick="setMines(5)" style="padding:10px; flex:1;">5</button>
+        <button class="btn-grey" onclick="setMines(10)" style="padding:10px; flex:1;">10</button>
+      </div>
+      <button class="btn-main" id="btnStartMines">Начать игру</button>
+    </div>
+
+    <div class="mines-grid" id="minesGrid" style="display:none;"></div>
+    <button class="btn-main" id="btnCashout" style="display:none; margin-top: 10px;">Забрать <span id="cashoutVal">0</span> ★</button>
+  </div>
+</div>
+
+<!-- КЕЙСЫ -->
+<div id="screen-cases" class="page-screen">
+  <div class="game-header">
+    <div class="back-btn" onclick="switchTab('games')">←</div>
+    <div class="game-title-h1">Кейсы</div>
+  </div>
+  <div class="game-content">
+    <div id="casesList">
+      <div class="cases-grid">
+        <div class="case-card" onclick="startCase('starter', 100)">
+          <div class="c-icon"><img src="/items/case_starter.png" style="width:100%;height:100%;object-fit:contain;" onerror="this.style.display='none';this.parentElement.innerHTML='📦';"></div>
+          <div class="c-name">Стартовый</div><div class="c-price">100 ★</div>
+        </div>
+        <div class="case-card" onclick="startCase('pro', 1000)">
+          <div class="c-icon"><img src="/items/case_pro.png" style="width:100%;height:100%;object-fit:contain;" onerror="this.style.display='none';this.parentElement.innerHTML='🎁';"></div>
+          <div class="c-name">Про</div><div class="c-price">1000 ★</div>
+        </div>
+        <div class="case-card" onclick="startCase('magic', 2500)">
+          <div class="c-icon"><img src="/items/case_magic.png" style="width:100%;height:100%;object-fit:contain;" onerror="this.style.display='none';this.parentElement.innerHTML='🔮';"></div>
+          <div class="c-name">Магический</div><div class="c-price">2500 ★</div>
+        </div>
+        <div class="case-card" onclick="startCase('winter', 3000)">
+          <div class="c-icon"><img src="/items/case_winter.png" style="width:100%;height:100%;object-fit:contain;" onerror="this.style.display='none';this.parentElement.innerHTML='❄️';"></div>
+          <div class="c-name">Зимний</div><div class="c-price">3000 ★</div>
+        </div>
+        <div class="case-card" onclick="startCase('legend', 5000)">
+          <div class="c-icon"><img src="/items/case_legend.png" style="width:100%;height:100%;object-fit:contain;" onerror="this.style.display='none';this.parentElement.innerHTML='⚡';"></div>
+          <div class="c-name">Легенда</div><div class="c-price">5000 ★</div>
+        </div>
+        <div class="case-card" onclick="startCase('inferno', 7500)">
+          <div class="c-icon"><img src="/items/case_inferno.png" style="width:100%;height:100%;object-fit:contain;" onerror="this.style.display='none';this.parentElement.innerHTML='🔥';"></div>
+          <div class="c-name">Адский</div><div class="c-price">7500 ★</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="caseRoller">
+      <button class="btn-grey" onclick="backToCases()" style="margin-bottom:15px; width:100%;">← Назад к списку</button>
+      <div class="roulette-container">
+        <div class="roulette-strip" id="rouletteStrip"></div>
+        <div class="roulette-pointer"></div>
+      </div>
+      <div id="caseActions" style="display:none; gap:10px; margin-top:15px;">
+          <button class="btn-main" id="btnCaseSell" style="flex:1;">Продать</button>
+          <button class="btn-main" id="btnCaseAgain" style="flex:1; background:linear-gradient(145deg, var(--card-3), var(--card-2)); color:#fff;">Ещё раз</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- АПГРЕЙД -->
+<div id="screen-upgrade" class="page-screen">
+  <div class="game-header">
+    <div class="back-btn" onclick="switchTab('games')">←</div>
+    <div class="game-title-h1">Апгрейд</div>
+  </div>
+  <div class="game-content">
+    <div class="upgrade-container">
+        <div class="upg-circle-wrap">
+          <svg class="upg-svg" viewBox="0 0 200 200">
+            <circle class="upg-svg-bg" cx="100" cy="100" r="85" />
+            <circle id="upgProgressCircle" class="upg-svg-win" cx="100" cy="100" r="85" stroke-dasharray="0 534" stroke-dashoffset="0" />
+          </svg>
+          <div id="upgCenterItem"><span style="opacity:0.2;">❓</span></div>
+          <div id="upgPointer"></div>
+        </div>
+
+        <div class="upg-chance-text">Шанс <span id="upgradeChanceText">0%</span></div>
+
+        <div class="upgrade-slots">
+          <div id="upgradeMySlot" class="slot-card active" onclick="openMyUpgradeSelect()">
+            <div class="s-label">Ставка</div>
+            <div class="s-content" id="upgMyContent">Выбрать</div>
+          </div>
+          <div style="display:flex; align-items:center; font-size:20px; color:var(--accent-bright); text-shadow:0 0 10px var(--accent);">➔</div>
+          <div id="upgradeTargetSlot" class="slot-card" onclick="openTargetUpgradeSelect()">
+            <div class="s-label">Получить</div>
+            <div class="s-content" id="upgTargetContent">Выбрать</div>
+          </div>
+        </div>
+
+        <div class="items-grid" id="upgradeItemsGrid"></div>
+
+        <button class="btn-main" id="btnDoUpgrade">Улучшить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ИНВЕНТАРЬ -->
+<div id="screen-inventory" class="page-screen">
+  <div class="game-header">
+    <div class="game-title-h1">Инвентарь</div>
+  </div>
+  <div class="inventory" id="inventory"></div>
+</div>
+
+<!-- КОШЕЛЕК -->
+<div id="screen-wallet" class="page-screen">
+  <div class="game-header">
+    <div class="game-title-h1">Кошелек</div>
+  </div>
+  <div style="padding: 0 16px;">
+      <div class="wallet-card">
+        <h3>Пополнение</h3>
+        <input type="number" id="depositAmount" placeholder="Введите сумму (★)">
+        <button class="btn-main" id="btnWalletDeposit">Пополнить</button>
+      </div>
+      <div class="wallet-card">
+        <h3>Вывод средств</h3>
+        <input type="number" id="withdrawAmount" placeholder="Введите сумму (★)">
+        <button class="btn-main" id="btnWalletWithdraw" style="background:linear-gradient(145deg, var(--card-3), var(--card-2)); color:#fff;">Вывести</button>
+      </div>
+  </div>
+</div>
+
+<!-- НАСТРОЙКИ -->
+<div id="screen-settings" class="page-screen">
+  <div class="game-header">
+    <div class="game-title-h1">Настройки</div>
+  </div>
+  <div style="padding: 0 16px;">
+    <div class="settings-card">
+      <h3>🔊 Регулировка звука</h3>
+      <div style="margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700;">
+          <span>Фоновая музыка</span>
+          <span id="bgmVolLabel" style="color:var(--accent-bright);">30%</span>
+        </div>
+        <input type="range" id="bgmVolumeSlider" class="vol-slider" min="0" max="100" value="30">
+      </div>
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700;">
+          <span>Звуковые эффекты</span>
+          <span id="sfxVolLabel" style="color:var(--accent-bright);">100%</span>
+        </div>
+        <input type="range" id="sfxVolumeSlider" class="vol-slider" min="0" max="100" value="100">
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <h3>💾 Данные и база данных</h3>
+      <button class="btn-grey" id="btnDownloadMyData" style="width:100%; margin-bottom:10px;">📥 Скачать мои данные (JSON)</button>
+      <button class="btn-grey" id="btnDownloadDB" style="width:100%; border-color:rgba(74,222,128,0.6); color:#bbf7d0;">🗄 Скачать БД (database.json)</button>
+    </div>
+
+    <button class="btn-main" id="adminFromSettings" style="display:none; background:linear-gradient(145deg, #bef264, var(--gold)); color:#041209; margin-bottom:11px; box-shadow:0 5px 0 #365314, 0 0 18px rgba(163,230,53,0.45);">🛡 Админ-панель</button>
+    <button class="btn-main" id="logoutBtn" style="background:linear-gradient(145deg, #f87171, var(--bad)); color:#fff; box-shadow:0 5px 0 #7f1d1d, 0 0 16px rgba(239,68,68,0.45);">Выйти</button>
+  </div>
+</div>
+
+<!-- АДМИНКА -->
+<div id="screen-admin" class="page-screen">
+  <div class="game-header">
+    <div class="back-btn" onclick="switchTab('settings')">←</div>
+    <div class="game-title-h1">Админка</div>
+  </div>
+  <div style="padding: 0 16px;" id="adminContent"></div>
+</div>
+
+<!-- НАВИГАЦИЯ -->
+<nav class="bottom-nav" id="bottomNav" style="display:none;">
+  <button class="nav-item active" data-tab="games" onclick="switchTab('games')"><span class="ni">🏠</span>Главная</button>
+  <button class="nav-item" data-tab="inventory" onclick="switchTab('inventory')"><span class="ni">🎒</span>Инвентарь</button>
+  <button class="nav-item" data-tab="wallet" onclick="switchTab('wallet')"><span class="ni">💼</span>Баланс</button>
+  <button class="nav-item" data-tab="settings" onclick="switchTab('settings')"><span class="ni">⚙️</span>Настройки</button>
+</nav>
+
+<!-- МОДАЛКА ПРОФИЛЯ -->
+<div class="modal" id="profileModal">
+  <div class="box" style="text-align:left;">
+    <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
+      <div style="width:70px; height:70px; background:var(--card-3); border:1px solid var(--accent); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:900; color:var(--accent-bright); box-shadow:0 0 14px rgba(74,222,128,0.4);">K</div>
+      <div>
+        <h2 id="profileName" style="font-size:20px; font-weight:900;">Игрок</h2>
+        <div style="color:var(--dim); font-size:12px;">@user</div>
+      </div>
+      <div style="margin-left:auto; text-align:right;">
+        <div style="font-size:18px; font-weight:900; color:var(--accent-bright);" id="profileBalance">0 ★</div>
+      </div>
+    </div>
+    <button class="btn-grey" onclick="closeModal('profileModal')" style="margin-top:20px; width:100%;">Закрыть</button>
+  </div>
+</div>
+
+<!-- МОДАЛКА ВЫБОРА ПРЕДМЕТА -->
+<div class="modal" id="selectItemModal">
+  <div class="box">
+    <h3 style="margin-bottom:15px; text-align:center; text-transform:uppercase;" id="selectItemTitle">Выберите предмет</h3>
+
+    <div id="mySelectOptions" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
+        <button class="btn-main" onclick="selectMyBet('stars')" style="padding:12px; font-size:14px;">★ Поставить Звёзды</button>
+        <button class="btn-main" onclick="selectMyBet('items')" style="padding:12px; font-size:14px; background:linear-gradient(145deg, var(--card-3), var(--card-2)); color:#fff;">🎁 Выбрать Предмет</button>
+    </div>
+
+    <div id="myItemsList" style="display:none; grid-template-columns:repeat(auto-fill,minmax(70px,1fr)); gap:10px; max-height:50vh; overflow-y:auto; padding:5px;"></div>
+    <div id="targetItemsList" style="display:none; grid-template-columns:repeat(auto-fill,minmax(70px,1fr)); gap:10px; max-height:50vh; overflow-y:auto; padding:5px;"></div>
+
+    <button class="btn-grey" onclick="closeModal('selectItemModal')" style="margin-top:15px; padding:12px; width:100%;">Отмена</button>
+  </div>
+</div>
+
+<script>
+let currentUser = null;
+let authMode = 'login';
+let playerData = { balance: 0, inventory: [], is_admin: false, is_super_admin: false };
+let SERVER_ITEMS = [];
+let activeCaseData = { price: 0, caseId: '' };
+
+/* ================= ЗВУКИ И РЕГУЛИРОВКА ГРОМКОСТИ ================= */
+function createAudioWithFallback(primarySrc, fallbackSrc) {
+  const audio = new Audio(primarySrc);
+  audio.addEventListener('error', () => {
+    if (fallbackSrc && audio.src !== new URL(fallbackSrc, window.location.origin).href) {
+      audio.src = fallbackSrc;
+      audio.load();
+    }
+  }, { once: true });
+  return audio;
+}
+
+const sfx = {
+  click: createAudioWithFallback('/sounds/click.mp3', '/sounds/click.wav'),
+  coin: createAudioWithFallback('/sounds/coin.mp3', '/sounds/coin.wav'),
+  spin: createAudioWithFallback('/sounds/spin.mp3', '/sounds/spin.wav'),
+  win: createAudioWithFallback('/sounds/win.mp3', '/sounds/win.wav'),
+  bomb: createAudioWithFallback('/sounds/bomb.mp3', '/sounds/bomb.wav')
+};
+
+const bgm = createAudioWithFallback('/sounds/bgm.mp3', '/sounds/bgm.wav');
+bgm.loop = true;
+
+let bgmVolume = Number(localStorage.getItem('kap_bgm_vol'));
+if (Number.isNaN(bgmVolume)) bgmVolume = 0.3;
+bgmVolume = Math.max(0, Math.min(1, bgmVolume));
+
+let sfxVolume = Number(localStorage.getItem('kap_sfx_vol'));
+if (Number.isNaN(sfxVolume)) sfxVolume = 1.0;
+sfxVolume = Math.max(0, Math.min(1, sfxVolume));
+
+function applyAudioVolumes() {
+  bgm.volume = bgmVolume;
+  Object.values(sfx).forEach(a => { a.volume = sfxVolume; });
+  const bgmSlider = document.getElementById('bgmVolumeSlider');
+  const sfxSlider = document.getElementById('sfxVolumeSlider');
+  const bgmLbl = document.getElementById('bgmVolLabel');
+  const sfxLbl = document.getElementById('sfxVolLabel');
+  if (bgmSlider) bgmSlider.value = Math.round(bgmVolume * 100);
+  if (sfxSlider) sfxSlider.value = Math.round(sfxVolume * 100);
+  if (bgmLbl) bgmLbl.textContent = Math.round(bgmVolume * 100) + '%';
+  if (sfxLbl) sfxLbl.textContent = Math.round(sfxVolume * 100) + '%';
+}
+
+function playSfx(name) {
+  if (sfx[name] && sfxVolume > 0) {
+    sfx[name].volume = sfxVolume;
+    sfx[name].currentTime = 0;
+    sfx[name].play().catch(() => {});
+  }
+}
+
+function playBGM() {
+  bgm.volume = bgmVolume;
+  if (bgm.paused && bgmVolume > 0) {
+    bgm.play().catch(() => {});
+  }
+}
+
+document.body.addEventListener('click', playBGM, { once: true });
+
+/* ====== АВТОРИЗАЦИЯ / ТОКЕН ====== */
+let AUTH_TOKEN = localStorage.getItem('auth_token') || '';
+function authHeaders(extra){ return Object.assign({'Content-Type':'application/json','x-auth-token':AUTH_TOKEN}, extra||{}); }
+async function apiGet(path){ return fetch(path, { headers: { 'x-auth-token': AUTH_TOKEN } }); }
+async function apiPost(path, body){ return fetch(path, { method:'POST', headers: authHeaders(), body: JSON.stringify(body||{}) }); }
+
+document.addEventListener('DOMContentLoaded', () => {
+  applyAudioVolumes();
+  const bgmSlider = $('bgmVolumeSlider');
+  const sfxSlider = $('sfxVolumeSlider');
+  if (bgmSlider) {
+    bgmSlider.addEventListener('input', e => {
+      bgmVolume = Number(e.target.value) / 100;
+      localStorage.setItem('kap_bgm_vol', String(bgmVolume));
+      applyAudioVolumes();
+      if (bgmVolume > 0 && bgm.paused) bgm.play().catch(() => {});
+    });
+  }
+  if (sfxSlider) {
+    sfxSlider.addEventListener('input', e => {
+      sfxVolume = Number(e.target.value) / 100;
+      localStorage.setItem('kap_sfx_vol', String(sfxVolume));
+      applyAudioVolumes();
+    });
+  }
+
+  checkLogin();
+  loadLiveDrops();
+  setInterval(loadLiveDrops, 10000);
+});
+
+const $ = id => document.getElementById(id);
+
+function renderIcon(icon, size = 40) {
+  if (!icon) return `<span style="font-size:${size}px">❓</span>`;
+  if (typeof icon === 'string' && icon.startsWith('/')) {
+    return `<img src="${icon}" style="width:${size}px;height:${size}px;object-fit:contain;vertical-align:middle;" onerror="this.src='https://via.placeholder.com/${size}?text=📦'">`;
+  }
+  return `<span style="font-size:${size}px;line-height:1">${icon}</span>`;
+}
+
+async function loadLiveDrops() {
+  const track = $('liveDropTrack');
+  if(!track) return;
+  try {
+    const res = await fetch('/api/drops');
+    if(!res.ok) return;
+    const drops = await res.json();
+    if (drops.length === 0) {
+        track.innerHTML = `<div class="drop-item"><span class="user">Пока нет выигрышей...</span></div>`;
+        return;
+    }
+    const renderDrops = (arr) => arr.map(d => `
+      <div class="drop-item">
+        <span class="user">${d.user_login}</span>
+        <span class="f-icon">${renderIcon(d.item_icon, 22)}</span>
+        <span class="item-name">${d.item_name}</span>
+        <span class="price">${d.item_price} ★</span>
+      </div>
+    `).join('');
+    track.innerHTML = renderDrops(drops) + renderDrops(drops);
+  } catch(e) {}
+}
+
+function toast(msg, type = 'info') {
+  const c = $('toastContainer');
+  const d = document.createElement('div');
+  d.className = 'toast';
+  if(type === 'error') {
+    d.style.background = 'linear-gradient(145deg, #f87171, var(--bad))';
+    d.style.color = '#fff';
+    d.style.borderColor = '#fca5a5';
+  }
+  d.textContent = msg; c.appendChild(d);
+  setTimeout(() => d.remove(), 3000);
+}
+function closeModal(id) { $(id).classList.remove('show'); }
+
+function openProfile() {
+    playSfx('click');
+    $('profileName').textContent = currentUser || 'Игрок';
+    $('profileBalance').textContent = (playerData.balance || 0) + ' ★';
+    $('profileModal').classList.add('show');
+}
+
+$('switchAuthMode').onclick = () => {
+  playSfx('click');
+  authMode = authMode === 'login' ? 'register' : 'login';
+  $('authTitle').textContent = authMode === 'login' ? 'Вход' : 'Регистрация';
+  $('mainAuthBtn').textContent = authMode === 'login' ? 'Войти' : 'Создать аккаунт';
+};
+
+$('mainAuthBtn').onclick = async () => {
+  playSfx('click');
+  const login = $('authLogin').value.trim();
+  const pass = $('authPassword').value;
+  if(!login || pass.length < 6) return toast('Логин и пароль (мин. 6 символов)', 'error');
+  try {
+    const res = await fetch(authMode === 'login' ? '/api/login' : '/api/register', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({login, password: pass})
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error);
+    currentUser = (data.user && data.user.login) || login;
+    AUTH_TOKEN = data.token || '';
+    localStorage.setItem('saved_user', currentUser);
+    localStorage.setItem('auth_token', AUTH_TOKEN);
+    playSfx('win');
+    $('authScreen').classList.remove('active');
+    $('bottomNav').style.display = 'flex';
+    switchTab('games');
+    enterGame();
+  } catch(e) { playSfx('bomb'); toast(e.message, 'error'); }
+};
+
+async function enterGame() {
+  try {
+    if(SERVER_ITEMS.length === 0) {
+      const r = await fetch('/api/items');
+      if(r.ok) SERVER_ITEMS = await r.json();
+    }
+    const res = await apiGet(`/api/user/${encodeURIComponent(currentUser)}`);
+    if(res.ok) {
+      playerData = await res.json();
+      $('uiBalanceTop').textContent = playerData.balance;
+      if(playerData.is_admin || playerData.is_super_admin) $('adminFromSettings').style.display = 'block';
+      else $('adminFromSettings').style.display = 'none';
+      renderInventory();
+    } else {
+      localStorage.removeItem('saved_user');
+      localStorage.removeItem('auth_token');
+      location.reload();
+    }
+  } catch(e) {}
+}
+
+function checkLogin() {
+  const saved = localStorage.getItem('saved_user');
+  if(saved && AUTH_TOKEN) {
+    currentUser = saved;
+    $('authScreen').classList.remove('active');
+    $('bottomNav').style.display = 'flex';
+    switchTab('games');
+    enterGame();
+  } else {
+    $('authScreen').classList.add('active');
+  }
+}
+$('logoutBtn').onclick = () => { playSfx('click'); localStorage.removeItem('saved_user'); localStorage.removeItem('auth_token'); location.reload(); };
+
+function switchTab(tabId) {
+  playSfx('click');
+  document.querySelectorAll('.page-screen').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const targetScreen = $(`screen-${tabId}`);
+  if(targetScreen) targetScreen.classList.add('active');
+  const navBtn = document.querySelector(`.nav-item[data-tab="${tabId}"]`);
+  if(navBtn) navBtn.classList.add('active');
+  if(tabId === 'admin') renderAdminUI();
+}
+
+function openGame(game) {
+  playSfx('click');
+  switchTab(game);
+  if(game === 'upgrade') { renderUpgradeGrid(); updateUpgradeUI(); }
+}
+
+function backToCases() {
+  playSfx('click');
+  $('casesList').style.display = 'block';
+  $('caseRoller').style.display = 'none';
+  $('caseActions').style.display = 'none';
+  isCaseOpening = false;
+}
+
+/* ================= СКАЧИВАНИЕ ДАННЫХ И БД ================= */
+async function triggerDownload(url, fallbackFilename) {
+  try {
+    playSfx('click');
+    const res = await apiGet(url);
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      playSfx('bomb');
+      return toast((data && data.error) || 'Нет доступа к скачиванию', 'error');
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fallbackFilename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1500);
+    playSfx('coin');
+    toast('Файл скачан', 'success');
+  } catch (e) {
+    playSfx('bomb');
+    toast('Ошибка при скачивании', 'error');
+  }
+}
+
+$('btnDownloadMyData').onclick = () => triggerDownload('/api/export/my-data', `kazinoap-${currentUser || 'user'}-data.json`);
+$('btnDownloadDB').onclick = () => triggerDownload('/api/admin/download-db', 'database.json');
+
+/* ================= КЕЙСЫ ================= */
+let isCaseOpening = false;
+let currentWinItem = null;
+
+async function startCase(caseId, price) {
+  if(isCaseOpening) return;
+  if(playerData.balance < price) { playSfx('bomb'); return toast('Мало звезд!', 'error'); }
+  playSfx('click');
+  if(!confirm(`Открыть кейс за ${price} ★?`)) return;
+
+  isCaseOpening = true;
+  activeCaseData = { price, caseId };
+  $('casesList').style.display = 'none';
+  $('caseRoller').style.display = 'block';
+  $('caseActions').style.display = 'none';
+
+  try {
+    const res = await apiPost('/api/cases/open', { caseId });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error);
+
+    playerData.balance = data.balance;
+    $('uiBalanceTop').textContent = playerData.balance;
+
+    currentWinItem = data.item;
+    const pool = data.pool;
+    const strip = $('rouletteStrip');
+    let html = ''; let items = [];
+    for(let i=0; i<50; i++) items.push(pool[Math.floor(Math.random() * pool.length)]);
+    items[45] = currentWinItem;
+
+    items.forEach(it => { html += `<div class="roulette-item"><div class="r-img">${renderIcon(it.icon, 40)}</div><div class="r-name">${it.name}</div></div>`; });
+    strip.innerHTML = html;
+    strip.style.transition = 'none'; strip.style.transform = 'translateX(0)';
+
+    setTimeout(() => {
+      const itemW = 80; const container = document.querySelector('.roulette-container'); const containerW = container.offsetWidth;
+      const offset = (45 * itemW) - (containerW / 2) + (itemW / 2);
+      strip.style.transition = 'transform 4s cubic-bezier(0.1, 0.7, 0.1, 1)'; strip.style.transform = `translateX(-${offset}px)`;
+
+      playSfx('spin');
+
+      setTimeout(() => {
+        toast(`Вы выбили: ${currentWinItem.name}`, 'success');
+        playSfx('win');
+        $('caseActions').style.display = 'flex';
+        isCaseOpening = false;
+        enterGame();
+      }, 4100);
+    }, 100);
+  } catch(e) {
+    playSfx('bomb');
+    toast(e.message, 'error');
+    isCaseOpening = false;
+    $('casesList').style.display = 'block'; $('caseRoller').style.display = 'none';
+  }
+}
+
+$('btnCaseSell').onclick = async () => {
+  if(!currentWinItem) return;
+  $('caseActions').style.display = 'none';
+  $('casesList').style.display = 'block'; $('caseRoller').style.display = 'none';
+  await sellItem(currentWinItem.uid);
+};
+
+$('btnCaseAgain').onclick = () => {
+  $('caseActions').style.display = 'none';
+  startCase(activeCaseData.caseId, activeCaseData.price);
+};
+
+/* ================= МИНЫ (СЕРВЕРНЫЕ) ================= */
+let minesActive = false, minesBet = 0, minesCount = 3, currentGridSize = 3, minesTotal = 9;
+function setMines(c) { playSfx('click'); minesCount = c; $('minesCountLbl').textContent = c; }
+
+$('btnStartMines').onclick = async () => {
+  if(minesActive) return;
+  playSfx('click');
+  const bet = parseInt($('minesBetInput').value) || 0;
+  if(bet < 10) { playSfx('bomb'); return toast('Мин. ставка 10 ★', 'error'); }
+  if(bet > playerData.balance) { playSfx('bomb'); return toast('Недостаточно средств', 'error'); }
+  try {
+    const res = await apiPost('/api/games/mines', { action:'start', bet, minesCount });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error);
+
+    playerData.balance = data.balance;
+    $('uiBalanceTop').textContent = playerData.balance;
+
+    currentGridSize = data.gridSize;
+    minesTotal = data.totalCells;
+    minesCount = data.minesCount;
+    minesBet = bet;
+    minesActive = true;
+
+    $('minesCountLbl').textContent = minesCount;
+    $('minesGridSizeLbl').textContent = `${currentGridSize}x${currentGridSize}`;
+    $('minesMultLbl').textContent = '1.00x';
+
+    const grid = $('minesGrid');
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = `repeat(${currentGridSize}, 1fr)`;
+    grid.style.pointerEvents = 'auto';
+    grid.innerHTML = '';
+    $('btnCashout').style.display = 'none';
+    $('btnStartMines').style.display = 'none';
+
+    for(let i=0;i<minesTotal;i++){
+      const cell = document.createElement('div');
+      cell.className = 'mine-cell';
+      cell.dataset.idx = i;
+      cell.onclick = () => clickMine(cell, i);
+      grid.appendChild(cell);
+    }
+  } catch(e) { playSfx('bomb'); toast(e.message, 'error'); }
+};
+
+async function clickMine(cell, idx) {
+  if(!minesActive || cell.classList.contains('opened')) return;
+  cell.classList.add('opened');
+  try {
+    const res = await apiPost('/api/games/mines', { action:'click', cell: idx });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error);
+
+    if(data.bomb) {
+      cell.textContent = '💣'; cell.classList.add('bomb');
+      minesActive = false;
+      $('btnCashout').style.display = 'none';
+      document.querySelectorAll('.mine-cell').forEach(c => {
+        const i = Number(c.dataset.idx);
+        if(data.bombs.includes(i) && !c.classList.contains('opened')) {
+          c.textContent = '💣'; c.classList.add('bomb');
+        }
+      });
+      playSfx('bomb');
+      toast('Вы подорвались!', 'error');
+      setTimeout(() => { enterGame(); resetMines(); }, 2000);
+    } else {
+      cell.textContent = '💎';
+      playSfx('click');
+      $('minesMultLbl').textContent = Number(data.multiplier).toFixed(2) + 'x';
+      $('btnCashout').style.display = 'block';
+      $('cashoutVal').textContent = data.potentialWin;
+    }
+  } catch(e) {
+    cell.classList.remove('opened');
+    playSfx('bomb');
+    toast(e.message, 'error');
+    resetMines();
+  }
+}
+
+$('btnCashout').onclick = async () => {
+  if(!minesActive) return;
+  try {
+    const res = await apiPost('/api/games/mines', { action:'cashout' });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error);
+
+    minesActive = false;
+    playerData.balance = data.balance;
+    $('uiBalanceTop').textContent = playerData.balance;
+    $('btnCashout').style.display = 'none';
+    $('minesGrid').style.pointerEvents = 'none';
+
+    document.querySelectorAll('.mine-cell').forEach(c => {
+      const i = Number(c.dataset.idx);
+      if(data.bombs && data.bombs.includes(i) && !c.classList.contains('opened')) c.textContent = '💣';
+    });
+
+    playSfx('win');
+    toast(`Вы забрали ${data.win} ★`, 'success');
+    setTimeout(() => resetMines(), 1500);
+  } catch(e) { playSfx('bomb'); toast(e.message, 'error'); }
+};
+
+function resetMines() {
+  minesActive = false;
+  $('minesGrid').style.display = 'none';
+  $('minesGrid').style.pointerEvents = 'auto';
+  $('btnCashout').style.display = 'none';
+  $('btnStartMines').style.display = 'block';
+}
+
+/* ================= АПГРЕЙД ================= */
+let myUpgradeItem = null, targetUpgradeItem = null;
+let myBetType = null;
+
+function openMyUpgradeSelect() {
+  playSfx('click');
+  $('selectItemTitle').textContent = 'Что ставим?';
+  $('mySelectOptions').style.display = 'flex';
+  $('myItemsList').style.display = 'none';
+  $('targetItemsList').style.display = 'none';
+  $('selectItemModal').classList.add('show');
+}
+
+function selectMyBet(type) {
+  playSfx('click');
+  $('mySelectOptions').style.display = 'none';
+  if (type === 'stars') {
+    const amount = prompt('Введите сумму звезд для ставки (мин. 10):', '100');
+    if (amount && Number(amount) >= 10) {
+      if (Number(amount) > playerData.balance) { playSfx('bomb'); return toast('Мало звезд на балансе!', 'error'); }
+      myBetType = 'stars';
+      myUpgradeItem = { price: Number(amount), name: 'Звёзды', icon: '⭐', uid: 'stars' };
+      $('upgMyContent').innerHTML = `<span style="color:var(--accent-bright);font-size:16px;">★</span> ${amount}`;
+      closeModal('selectItemModal');
+      updateUpgradeUI();
+    }
+  } else if (type === 'items') {
+    myBetType = 'item';
+    $('myItemsList').style.display = 'grid';
+    const list = $('myItemsList');
+    list.innerHTML = '';
+    if(!playerData.inventory || playerData.inventory.length === 0) {
+      list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:var(--dim);">Пусто</div>';
+      return;
+    }
+    playerData.inventory.sort((a,b) => a.price - b.price).forEach(item => {
+      const d = document.createElement('div');
+      d.style.cssText = `background:var(--card-2); border:1px solid var(--border); border-radius:10px; padding:10px; text-align:center; cursor:pointer;`;
+      d.innerHTML = `${renderIcon(item.icon, 30)}<div style="font-size:10px; font-weight:700; margin-top:5px;">${item.name}</div><div style="color:var(--accent-bright); font-size:10px; font-weight:800;">${item.price} ★</div>`;
+      d.onclick = () => {
+        playSfx('click');
+        myUpgradeItem = item;
+        myBetType = 'item';
+        $('upgMyContent').innerHTML = `${renderIcon(item.icon, 16)} ${item.name}`;
+        closeModal('selectItemModal');
+        updateUpgradeUI();
+      };
+      list.appendChild(d);
+    });
+  }
+}
+
+function openTargetUpgradeSelect() {
+  playSfx('click');
+  $('selectItemTitle').textContent = 'Что хотим получить?';
+  $('mySelectOptions').style.display = 'none';
+  $('myItemsList').style.display = 'none';
+  $('targetItemsList').style.display = 'grid';
+  const list = $('targetItemsList');
+  list.innerHTML = '';
+  SERVER_ITEMS.sort((a,b) => a.price - b.price).forEach(item => {
+    const d = document.createElement('div');
+    d.style.cssText = `background:var(--card-2); border:1px solid var(--border); border-radius:10px; padding:10px; text-align:center; cursor:pointer;`;
+    d.innerHTML = `${renderIcon(item.icon, 30)}<div style="font-size:10px; font-weight:700; margin-top:5px;">${item.name}</div><div style="color:var(--accent-bright); font-size:10px; font-weight:800;">${item.price} ★</div>`;
+    d.onclick = () => {
+      playSfx('click');
+      targetUpgradeItem = item;
+      $('upgTargetContent').innerHTML = `${renderIcon(item.icon, 16)} ${item.name}`;
+      closeModal('selectItemModal');
+      updateUpgradeUI();
+      renderUpgradeGrid();
+    };
+    list.appendChild(d);
+  });
+  $('selectItemModal').classList.add('show');
+}
+
+function renderUpgradeGrid() {
+  const grid = $('upgradeItemsGrid'); grid.innerHTML = '';
+  const pool = SERVER_ITEMS.length > 0 ? SERVER_ITEMS : [];
+  pool.forEach(item => {
+    const d = document.createElement('div');
+    d.className = `item-card ${targetUpgradeItem && targetUpgradeItem.id === item.id ? 'selected' : ''}`;
+    const mult = (myUpgradeItem ? (item.price / myUpgradeItem.price) : 0).toFixed(1);
+    d.innerHTML = `
+      <div class="ic-icon">${renderIcon(item.icon, 30)}</div>
+      <div class="ic-name">${item.name}</div>
+      <div class="ic-price">${item.price} ★</div>
+      ${myUpgradeItem && item.price > myUpgradeItem.price ? `<div class="ic-mult">x${mult}</div>` : ''}
+    `;
+    d.onclick = () => {
+      playSfx('click');
+      targetUpgradeItem = item;
+      $('upgTargetContent').innerHTML = `${renderIcon(item.icon, 16)} ${item.name}`;
+      updateUpgradeUI();
+      renderUpgradeGrid();
+    };
+    grid.appendChild(d);
+  });
+}
+
+function updateUpgradeUI() {
+  const circle = $('upgProgressCircle');
+  circle.style.strokeDashoffset = '0';
+  if (!myUpgradeItem || !targetUpgradeItem) {
+    $('upgradeChanceText').textContent = '0%';
+    $('upgCenterItem').innerHTML = '<span style="opacity:0.2;">❓</span>';
+    circle.style.strokeDasharray = `0 534`;
+    return;
+  }
+  if (myUpgradeItem.price >= targetUpgradeItem.price) {
+    $('upgradeChanceText').textContent = '0%';
+    $('upgCenterItem').innerHTML = '<span style="opacity:0.2;">❌</span>';
+    circle.style.strokeDasharray = `0 534`;
+    return;
+  }
+  let chance = (myUpgradeItem.price / targetUpgradeItem.price) * 50;
+  if (chance > 50) chance = 50;
+  if (chance < 1) chance = 1;
+  $('upgradeChanceText').textContent = chance.toFixed(1) + '%';
+  $('upgCenterItem').innerHTML = renderIcon(targetUpgradeItem.icon, 60);
+  const arcLength = (chance / 100) * 534;
+  circle.style.strokeDasharray = `${arcLength} 534`;
+}
+
+$('btnDoUpgrade').onclick = async () => {
+  if(!myUpgradeItem || !targetUpgradeItem) { playSfx('bomb'); return toast('Выберите предметы', 'error'); }
+  if(myUpgradeItem.price >= targetUpgradeItem.price) { playSfx('bomb'); return toast('Цель должна быть дороже', 'error'); }
+
+  $('btnDoUpgrade').disabled = true;
+  const pointer = $('upgPointer');
+  pointer.classList.remove('spinning');
+  pointer.style.transform = 'translate(-50%, -100%) rotate(0deg)';
+
+  try {
+    const bodyData = { targetItemId: targetUpgradeItem.id };
+    if (myBetType === 'stars') bodyData.betStars = myUpgradeItem.price;
+    else bodyData.myUid = myUpgradeItem.uid;
+
+    const res = await apiPost('/api/upgrade', bodyData);
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error);
+
+    setTimeout(() => {
+      pointer.classList.add('spinning');
+      playSfx('spin');
+
+      const chanceDeg = (data.chance / 100) * 360;
+      const gap = 360 - chanceDeg;
+      let targetAngle;
+      if (data.win) {
+        targetAngle = chanceDeg * 0.15 + Math.random() * chanceDeg * 0.7;
+      } else {
+        targetAngle = chanceDeg + gap * 0.1 + Math.random() * gap * 0.8;
+      }
+      const totalSpins = 360 * 5;
+      pointer.style.transform = `translate(-50%, -100%) rotate(${totalSpins + targetAngle}deg)`;
+
+      setTimeout(() => {
+        $('btnDoUpgrade').disabled = false;
+        myUpgradeItem = null;
+        targetUpgradeItem = null;
+        myBetType = null;
+        $('upgMyContent').textContent = 'Выбрать';
+        $('upgTargetContent').textContent = 'Выбрать';
+
+        pointer.classList.remove('spinning');
+        pointer.style.transform = 'translate(-50%, -100%) rotate(0deg)';
+
+        updateUpgradeUI();
+        renderUpgradeGrid();
+        enterGame();
+
+        if(data.win) {
+          playSfx('win');
+          toast('УСПЕХ! Вы получили ' + data.item.name, 'success');
+        } else {
+          playSfx('bomb');
+          toast('НЕУДАЧА', 'error');
+        }
+      }, 4600);
+    }, 50);
+  } catch(e) {
+    playSfx('bomb');
+    toast(e.message, 'error');
+    $('btnDoUpgrade').disabled = false;
+  }
+};
+
+/* ================= ИНВЕНТАРЬ ================= */
+function renderInventory() {
+  const inv = $('inventory'); inv.innerHTML = '';
+  if(!playerData.inventory || playerData.inventory.length === 0) { inv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--dim); padding:20px;">Пусто</div>'; return; }
+  playerData.inventory.forEach(item => {
+    const d = document.createElement('div'); d.className = 'item';
+    d.innerHTML = `<div class="ii">${renderIcon(item.icon, 32)}</div><div class="iname">${item.name}</div><div class="iprice">${item.price} ★</div><button onclick="sellItem('${item.uid}')">Продать</button>`;
+    inv.appendChild(d);
+  });
+}
+async function sellItem(uid) {
+  playSfx('click');
+  if(!confirm('Продать предмет?')) return;
+  try {
+    await apiPost('/api/inventory/sell', { uid });
+    playSfx('coin');
+    toast('Предмет продан!', 'success');
+    await enterGame();
+  } catch(e) { playSfx('bomb'); }
+}
+
+/* ================= КОШЕЛЕК ================= */
+$('btnWalletDeposit').onclick = async () => {
+  playSfx('click');
+  const amount = $('depositAmount').value;
+  if(!amount || amount <= 0) { playSfx('bomb'); return toast('Введите сумму', 'error'); }
+  const res = await apiPost('/api/wallet/deposit', { amount });
+  if(res.ok) { playSfx('coin'); toast('Заявка создана! Ожидайте.', 'success'); }
+  else { playSfx('bomb'); toast('Ошибка', 'error'); }
+};
+
+$('btnWalletWithdraw').onclick = async () => {
+  playSfx('click');
+  const amount = $('withdrawAmount').value;
+  if(!amount || amount <= 0) { playSfx('bomb'); return toast('Введите сумму', 'error'); }
+  const res = await apiPost('/api/wallet/withdraw', { amount });
+  if(res.ok) {
+    playSfx('win');
+    toast('Заявка на вывод создана!', 'success');
+    enterGame();
+  } else { playSfx('bomb'); const d = await res.json(); toast(d.error, 'error'); }
+};
+
+/* ================= АДМИНКА ================= */
+function renderAdminUI() {
+  const c = $('adminContent');
+  c.innerHTML = `
+    <div class="admin-box"><h3>Игроки</h3><table id="adminTable" style="width:100%; border-collapse:collapse; font-size:12px;"></table></div>
+    <div class="admin-box"><h3>Выдача звёзд</h3><input type="text" id="aTarget" placeholder="Логин"><input type="number" id="aAmount" value="1000"><button onclick="quickAdmin('give')">Выдать</button></div>
+    <div class="admin-box"><h3>Выдача NFT</h3><input type="text" id="nftTarget" placeholder="Логин"><input type="text" id="nftItemId" placeholder="ID"><input type="text" id="nftName" placeholder="Название"><input type="text" id="nftIcon" placeholder="Иконка"><input type="number" id="nftPrice" value="100"><button onclick="adminGiveNft()">Выдать NFT</button></div>
+    ${playerData.is_super_admin ? `
+    <div class="admin-box"><h3 style="color:var(--bad);">Для Главного Админа</h3><input type="text" id="aTargetTake" placeholder="Логин"><input type="number" id="aAmountTake" value="1000"><button style="background:var(--bad); color:#fff;" onclick="quickAdmin('take')">Забрать звёзды</button></div>
+    <div class="admin-box"><h3>Выводы</h3><div id="aWithdraws"></div></div>
+    <div class="admin-box"><h3>Пополнения</h3><div id="aDeposits"></div></div>
+    <div class="admin-box"><h3>Промокод</h3><input type="text" id="pCode" placeholder="Код"><input type="number" id="pStars" value="100"><input type="number" id="pLimit" value="10"><button onclick="createPromo()">Создать</button></div>
+    <div class="admin-box"><h3>Права</h3><input type="text" id="adminLoginTarget" placeholder="Логин"><button onclick="makeAdmin()">Сделать админом</button><button style="background:var(--bad); color:#fff;" onclick="removeAdmin()">Снять права</button></div>
+    <div class="admin-box"><h3>Логи</h3><div id="adminLogs"></div></div>` : ''}
+  `;
+  loadAdminTable(); if(playerData.is_super_admin) { loadWithdraws(); loadDeposits(); loadLogs(); }
+}
+window.loadAdminTable = async function () {
+  try {
+    var res = await apiGet('/api/admin/players'); if (!res.ok) return; var players = await res.json();
+    $('adminTable').innerHTML = players.map(p => `<tr><td style="color:${p.is_super_admin?'#f87171':(p.is_admin?'var(--accent-bright)':'var(--text)')};font-weight:700;border-bottom:1px solid var(--border);padding:8px 0;">${p.login}</td><td style="border-bottom:1px solid var(--border);">${p.balance}★</td><td style="border-bottom:1px solid var(--border);">${p.nft_count} шт</td></tr>`).join('');
+  } catch (e) {}
+};
+window.loadWithdraws = async function () {
+  try {
+    var res = await apiGet('/api/admin/withdraws'); var data = await res.json();
+    $('aWithdraws').innerHTML = data.map(w => `<div style="margin-bottom:7px;font-size:12px;">${w.user_login} → Вывод ${w.amount_stars}★ <button onclick="acceptWithdraw('${w.id}')" style="width:auto;padding:5px 10px;margin:0;display:inline-block;">ОК</button></div>`).join('') || '<div style="font-size:12px;color:var(--dim);">Пусто</div>';
+  } catch (e) {}
+};
+window.loadDeposits = async function () {
+  try {
+    var res = await apiGet('/api/admin/deposits'); var data = await res.json();
+    $('aDeposits').innerHTML = data.map(d => `<div style="margin-bottom:7px;font-size:12px;">${d.user_login} просит ${d.amount_stars}★ <button onclick="acceptDeposit('${d.id}')" style="width:auto;padding:5px 10px;margin:0;display:inline-block;">ОК</button></div>`).join('') || '<div style="font-size:12px;color:var(--dim);">Пусто</div>';
+  } catch (e) {}
+};
+window.loadLogs = async function () {
+  try {
+    var res = await apiGet('/api/admin/logs'); var data = await res.json();
+    $('adminLogs').innerHTML = data.map(l => `<div style="font-size:11px;margin-bottom:5px;border-bottom:1px solid var(--border-soft);padding-bottom:3px;">[${new Date(l.created_at).toLocaleTimeString()}] <span style="color:var(--accent-bright);font-weight:700;">${l.admin_login}</span>: ${l.action} (${l.details})</div>`).join('') || '<div style="font-size:12px;color:var(--dim);">Пусто</div>';
+  } catch (e) {}
+};
+window.quickAdmin = async function (act) {
+  playSfx('click');
+  var t = act === 'take' ? $('aTargetTake').value : $('aTarget').value;
+  var a = act === 'take' ? $('aAmountTake').value : $('aAmount').value;
+  if (!t || !a) { playSfx('bomb'); return toast('Заполните поля', 'error'); }
+  var url = '/api/admin/' + (act === 'give' ? 'give-stars' : 'take-stars');
+  try {
+    var res = await apiPost(url, { targetLogin: t, amount: a });
+    var data = await res.json();
+    if (res.ok) {
+      playSfx('coin');
+      toast('Успешно', 'success');
+      if (t === currentUser) enterGame();
+      loadAdminTable();
+      if (act === 'take') loadLogs();
+    } else { playSfx('bomb'); toast(data.error, 'error'); }
+  } catch (e) { playSfx('bomb'); toast('Ошибка сети', 'error'); }
+};
+window.acceptDeposit = async function (id) {
+  playSfx('click');
+  try {
+    var res = await apiPost('/api/admin/deposit/accept', { id });
+    if (res.ok) { playSfx('coin'); toast('Одобрено', 'success'); loadDeposits(); loadLogs(); } else { playSfx('bomb'); var d = await res.json(); toast(d.error, 'error'); }
+  } catch (e) { playSfx('bomb'); toast('Ошибка сети', 'error'); }
+};
+window.acceptWithdraw = async function (id) {
+  playSfx('click');
+  try {
+    var res = await apiPost('/api/admin/withdraws/accept', { id });
+    if (res.ok) { playSfx('coin'); toast('Одобрено', 'success'); loadWithdraws(); loadLogs(); } else { playSfx('bomb'); var d = await res.json(); toast(d.error, 'error'); }
+  } catch (e) { playSfx('bomb'); toast('Ошибка сети', 'error'); }
+};
+window.adminGiveNft = async function () {
+  playSfx('click');
+  var t = $('nftTarget').value, id = $('nftItemId').value, name = $('nftName').value, icon = $('nftIcon').value, price = $('nftPrice').value;
+  if (!t || !id || !name) { playSfx('bomb'); return toast('Заполните поля', 'error'); }
+  try {
+    var res = await apiPost('/api/admin/give-nft', { targetLogin: t, item: { id: id, name: name, icon: icon, price: price } });
+    if (res.ok) { playSfx('win'); toast('NFT выдан', 'success'); loadAdminTable(); } else { playSfx('bomb'); toast('Ошибка', 'error'); }
+  } catch (e) { playSfx('bomb'); toast('Ошибка сети', 'error'); }
+};
+window.createPromo = async function () {
+  playSfx('click');
+  var code = $('pCode').value, stars = $('pStars').value, limit = $('pLimit').value;
+  try {
+    var res = await apiPost('/api/admin/create-promo', { code, stars, limit });
+    if (res.ok) { playSfx('coin'); toast('Создан', 'success'); loadLogs(); } else { playSfx('bomb'); var d = await res.json(); toast(d.error, 'error'); }
+  } catch (e) { playSfx('bomb'); toast('Ошибка сети', 'error'); }
+};
+window.makeAdmin = async function () {
+  playSfx('click');
+  var t = $('adminLoginTarget').value;
+  try {
+    var res = await apiPost('/api/admin/make-admin', { targetLogin: t });
+    if (res.ok) { playSfx('coin'); toast('Теперь админ', 'success'); loadAdminTable(); loadLogs(); } else { playSfx('bomb'); var d = await res.json(); toast(d.error, 'error'); }
+  } catch (e) { playSfx('bomb'); toast('Ошибка сети', 'error'); }
+};
+window.removeAdmin = async function () {
+  playSfx('click');
+  var t = $('adminLoginTarget').value;
+  try {
+    var res = await apiPost('/api/admin/remove-admin', { targetLogin: t });
+    if (res.ok) { playSfx('coin'); toast('Права сняты', 'success'); loadAdminTable(); loadLogs(); } else { playSfx('bomb'); var d = await res.json(); toast(d.error, 'error'); }
+  } catch (e) { playSfx('bomb'); toast('Ошибка сети', 'error'); }
+};
+
+$('adminFromSettings').onclick = () => switchTab('admin');
+</script>
+</body>
+</html>
