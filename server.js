@@ -137,7 +137,7 @@ function generateSoundAssets() {
     writeWavFile(bombPath, out, sr);
   }
 
-  // 6. Фоновая музыка (бесшовный 8-секундный зелёный чилл-синт цикл)
+  // 6. Фоновая музыка (бесшовный 8-секундный чилл-синт цикл)
   const bgmPath = path.join(SOUNDS_DIR, 'bgm.wav');
   if (!fs.existsSync(bgmPath)) {
     const loopSec = 8;
@@ -255,8 +255,7 @@ function ensureAdmin(login, password) {
   }
 }
 
-ensureAdmin('tgweb', '202220222022');
-ensureAdmin('tagen', 'tag20222022');
+ensureAdmin('fleyn', 'f200200');
 
 if (dbChanged) {
   saveDB(db);
