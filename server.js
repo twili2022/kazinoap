@@ -1,463 +1,563 @@
 const express = require('express');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
 const crypto = require('crypto');
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.use(express.json({ limit: '2mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.urlencoded({ extended: true }));
 
-/* ================== АВТОГЕНЕРАЦИЯ ЗВУКОВ ДЛЯ РЕПОЗИТОРИЯ ================== */
-const SOUNDS_DIR = path.join(__dirname, 'public', 'sounds');
+const PUBLIC_DIR = path.join(__dirname, 'public');
+const SOUNDS_DIR = path.join(PUBLIC_DIR, 'sounds');
+const DB_FILE = process.env.DB_PATH
+  ? path.resolve(process.env.DB_PATH)
+  : path.join(__dirname, 'database.json');
 
-function writeWavFile(filePath, samples, sampleRate = 22050) {
-  const numChannels = 1;
-  const bitsPerSample = 16;
-  const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
-  const blockAlign = numChannels * (bitsPerSample / 8);
+fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
+fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+fs.mkdirSync(SOUNDS_DIR, { recursive: true });
+
+/* ================== АВТОГЕНЕРАЦИЯ WAV-ЗВУКОВ ================== */
+function createWavBuffer(samples, sampleRate = 22050) {
   const dataSize = samples.length * 2;
-  const buffer = Buffer.alloc(44 + dataSize);
-
-  buffer.write('RIFF', 0);
-  buffer.writeUInt32LE(36 + dataSize, 4);
-  buffer.write('WAVE', 8);
-  buffer.write('fmt ', 12);
-  buffer.writeUInt32LE(16, 16);
-  buffer.writeUInt16LE(1, 20);
-  buffer.writeUInt16LE(numChannels, 22);
-  buffer.writeUInt32LE(sampleRate, 24);
-  buffer.writeUInt32LE(byteRate, 28);
-  buffer.writeUInt16LE(blockAlign, 32);
-  buffer.writeUInt16LE(bitsPerSample, 34);
-  buffer.write('data', 36);
-  buffer.writeUInt32LE(dataSize, 40);
+  const buf = Buffer.alloc(44 + dataSize);
+  buf.write('RIFF', 0);
+  buf.writeUInt32LE(36 + dataSize, 4);
+  buf.write('WAVE', 8);
+  buf.write('fmt ', 12);
+  buf.writeUInt32LE(16, 16);
+  buf.writeUInt16LE(1, 20);
+  buf.writeUInt16LE(1, 22);
+  buf.writeUInt32LE(sampleRate, 24);
+  buf.writeUInt32LE(sampleRate * 2, 28);
+  buf.writeUInt16LE(2, 32);
+  buf.writeUInt16LE(16, 34);
+  buf.write('data', 36);
+  buf.writeUInt32LE(dataSize, 40);
 
   for (let i = 0; i < samples.length; i++) {
     const clamped = Math.max(-1, Math.min(1, samples[i]));
-    buffer.writeInt16LE(Math.round(clamped * 32767), 44 + i * 2);
+    buf.writeInt16LE(Math.round(clamped * 32767), 44 + i * 2);
   }
-  fs.writeFileSync(filePath, buffer);
+  return buf;
 }
 
-function generateSoundAssets() {
-  fs.mkdirSync(SOUNDS_DIR, { recursive: true });
-  const sr = 22050;
+function synthTone(freqStart, freqEnd, durationSec, volume = 0.35, wave = 'sine', sampleRate = 22050) {
+  const len = Math.max(1, Math.floor(sampleRate * durationSec));
+  const samples = new Float32Array(len);
+  let phase = 0;
 
-  // 1. Клик / безопасная клетка
-  const clickPath = path.join(SOUNDS_DIR, 'click.wav');
-  if (!fs.existsSync(clickPath)) {
-    const len = Math.floor(sr * 0.08);
-    const out = new Float32Array(len);
-    for (let i = 0; i < len; i++) {
-      const t = i / sr;
-      const env = Math.exp(-t * 48);
-      const freq = 620 + t * 2800;
-      out[i] = Math.sin(2 * Math.PI * freq * t) * env * 0.45;
+  for (let i = 0; i < len; i++) {
+    const t = i / len;
+    const freq = freqStart + (freqEnd - freqStart) * t;
+    phase += (2 * Math.PI * freq) / sampleRate;
+    const env = Math.sin(Math.min(1, t * 8) * (Math.PI / 2)) * (1 - t * 0.75);
+
+    let raw = 0;
+    if (wave === 'square') {
+      raw = Math.sin(phase) >= 0 ? 1 : -1;
+    } else if (wave === 'saw') {
+      raw = 2 * ((phase / (2 * Math.PI)) % 1) - 1;
+    } else if (wave === 'noise') {
+      raw = Math.random() * 2 - 1;
+    } else {
+      raw = Math.sin(phase);
     }
-    writeWavFile(clickPath, out, sr);
+    samples[i] = raw * env * volume;
   }
-
-  // 2. Монета / звёзды
-  const coinPath = path.join(SOUNDS_DIR, 'coin.wav');
-  if (!fs.existsSync(coinPath)) {
-    const len = Math.floor(sr * 0.34);
-    const out = new Float32Array(len);
-    for (let i = 0; i < len; i++) {
-      const t = i / sr;
-      const freq = t < 0.09 ? 987.77 : 1318.51;
-      const localT = t < 0.09 ? t : t - 0.09;
-      const env = Math.exp(-localT * 11);
-      out[i] = (
-        Math.sin(2 * Math.PI * freq * t) * 0.65 +
-        Math.sin(2 * Math.PI * freq * 2 * t) * 0.25
-      ) * env * 0.45;
-    }
-    writeWavFile(coinPath, out, sr);
-  }
-
-  // 3. Победа в кейсе / апгрейде / выводе
-  const winPath = path.join(SOUNDS_DIR, 'win.wav');
-  if (!fs.existsSync(winPath)) {
-    const notes = [523.25, 659.25, 783.99, 1046.5];
-    const stepSec = 0.11;
-    const len = Math.floor(sr * (notes.length * stepSec + 0.35));
-    const out = new Float32Array(len);
-    for (let i = 0; i < len; i++) {
-      const t = i / sr;
-      const idx = Math.min(notes.length - 1, Math.floor(t / stepSec));
-      const freq = notes[idx];
-      const localT = t - idx * stepSec;
-      const env = Math.exp(-localT * 6.5);
-      out[i] = (
-        Math.sin(2 * Math.PI * freq * t) * 0.6 +
-        Math.sin(2 * Math.PI * freq * 1.5 * t) * 0.2
-      ) * env * 0.48;
-    }
-    writeWavFile(winPath, out, sr);
-  }
-
-  // 4. Кручение рулетки кейса / стрелки апгрейда
-  const spinPath = path.join(SOUNDS_DIR, 'spin.wav');
-  if (!fs.existsSync(spinPath)) {
-    const dur = 3.8;
-    const len = Math.floor(sr * dur);
-    const out = new Float32Array(len);
-    let tickCursor = 0;
-    let tickInterval = 0.055;
-    while (tickCursor < dur) {
-      const startSample = Math.floor(tickCursor * sr);
-      const tickLen = Math.floor(sr * 0.025);
-      const progress = tickCursor / dur;
-      const baseFreq = 920 - progress * 260;
-      for (let j = 0; j < tickLen && startSample + j < len; j++) {
-        const lt = j / sr;
-        const env = Math.exp(-lt * 130);
-        out[startSample + j] += Math.sin(2 * Math.PI * baseFreq * lt) * env * 0.35;
-      }
-      tickCursor += tickInterval;
-      tickInterval = Math.min(0.24, tickInterval * 1.042);
-    }
-    writeWavFile(spinPath, out, sr);
-  }
-
-  // 5. Взрыв мины / неудача
-  const bombPath = path.join(SOUNDS_DIR, 'bomb.wav');
-  if (!fs.existsSync(bombPath)) {
-    const len = Math.floor(sr * 0.45);
-    const out = new Float32Array(len);
-    let lp = 0;
-    for (let i = 0; i < len; i++) {
-      const t = i / sr;
-      const env = Math.exp(-t * 9);
-      const white = Math.random() * 2 - 1;
-      lp = lp * 0.88 + white * 0.12;
-      const sub = Math.sin(2 * Math.PI * Math.max(42, 130 - t * 220) * t) * 0.55;
-      out[i] = (lp * 0.9 + sub) * env * 0.55;
-    }
-    writeWavFile(bombPath, out, sr);
-  }
-
-  // 6. Фоновая музыка (бесшовный 8-секундный чилл-синт цикл)
-  const bgmPath = path.join(SOUNDS_DIR, 'bgm.wav');
-  if (!fs.existsSync(bgmPath)) {
-    const loopSec = 8;
-    const len = sr * loopSec;
-    const out = new Float32Array(len);
-    const progression = [
-      [130.81, 196.00, 246.94],
-      [110.00, 164.81, 220.00],
-      [146.83, 220.00, 261.63],
-      [196.00, 246.94, 293.66]
-    ];
-    for (let i = 0; i < len; i++) {
-      const t = i / sr;
-      const barIdx = Math.floor(t / 2) % progression.length;
-      const chord = progression[barIdx];
-      const barPhase = (t % 2) / 2;
-      const swell = Math.sin(Math.PI * barPhase);
-      let sample = 0;
-      chord.forEach((f, idx) => {
-        const detune = 1 + (idx - 1) * 0.002;
-        sample += Math.sin(2 * Math.PI * f * detune * t) * 0.12;
-      });
-      const arpNote = chord[Math.floor(t * 4) % chord.length] * 2;
-      const arpEnv = Math.exp(-((t * 4) % 1) * 5) * 0.06;
-      sample += Math.sin(2 * Math.PI * arpNote * t) * arpEnv;
-      out[i] = sample * (0.45 + 0.55 * swell);
-    }
-    writeWavFile(bgmPath, out, sr);
-  }
-}
-generateSoundAssets();
-
-/* ================== АВТОПОИСК КАРТИНОК ================== */
-let FOUND_IMAGES = {};
-const ITEMS_DIR = path.join(__dirname, 'public', 'items');
-
-function scanImages() {
-  FOUND_IMAGES = {};
-  if (!fs.existsSync(ITEMS_DIR)) return;
-  const entries = fs.readdirSync(ITEMS_DIR, { withFileTypes: true });
-  entries.forEach(entry => {
-    const fullPath = path.join(ITEMS_DIR, entry.name);
-    if (entry.isFile() && /\.(png|jpe?g|webp|gif)$/i.test(entry.name)) {
-      const baseName = path.parse(entry.name).name.toLowerCase().replace(/\s+/g, '_');
-      FOUND_IMAGES[baseName] = '/items/' + encodeURIComponent(entry.name);
-    }
-    if (entry.isDirectory()) {
-      const folderName = entry.name.toLowerCase().replace(/\s+/g, '_');
-      const filesInFolder = fs.readdirSync(fullPath);
-      const imageFile = filesInFolder.find(f => /\.(png|jpe?g|webp|gif)$/i.test(f));
-      if (imageFile) {
-        FOUND_IMAGES[folderName] = '/items/' + encodeURIComponent(entry.name) + '/' + encodeURIComponent(imageFile);
-      }
-    }
-  });
-}
-scanImages();
-
-function getIconPath(id, fallbackEmoji) {
-  if (FOUND_IMAGES[id]) return FOUND_IMAGES[id];
-  return fallbackEmoji;
+  return samples;
 }
 
-/* ================== ХРАНИЛИЩЕ ================== */
-const DB_FILE = process.env.DB_PATH || path.join(__dirname, 'database.json');
-const EMPTY_DB = () => ({
-  users: [], inventory: [], user_customization: [], drop_history: [],
-  withdraw_requests: [], deposit_requests: [], promocodes: [], promo_history: [],
-  admin_logs: [], admin_notes: [], broadcasts: [], sessions: []
-});
-
-function loadDB() {
-  if (!fs.existsSync(DB_FILE)) return EMPTY_DB();
-  try {
-    const d = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-    if (!d.sessions) d.sessions = [];
-    if (!d.users) d.users = [];
-    if (!d.inventory) d.inventory = [];
-    if (!d.user_customization) d.user_customization = [];
-    if (!d.drop_history) d.drop_history = [];
-    if (!d.withdraw_requests) d.withdraw_requests = [];
-    if (!d.deposit_requests) d.deposit_requests = [];
-    if (!d.promocodes) d.promocodes = [];
-    if (!d.admin_logs) d.admin_logs = [];
-    return d;
-  } catch (e) { return EMPTY_DB(); }
+function concatSamples(...parts) {
+  const total = parts.reduce((acc, p) => acc + p.length, 0);
+  const out = new Float32Array(total);
+  let offset = 0;
+  for (const p of parts) {
+    out.set(p, offset);
+    offset += p.length;
+  }
+  return out;
 }
-function saveDB(dbData) { fs.writeFileSync(DB_FILE, JSON.stringify(dbData, null, 2)); }
 
-let db = loadDB();
-let dbChanged = false;
+function ensureSoundFiles() {
+  const specs = {
+    'click.wav': () => synthTone(780, 520, 0.06, 0.25, 'sine'),
+    'coin.wav': () => concatSamples(
+      synthTone(987.77, 987.77, 0.07, 0.28, 'sine'),
+      synthTone(1318.51, 1318.51, 0.14, 0.3, 'sine')
+    ),
+    'win.wav': () => concatSamples(
+      synthTone(523.25, 523.25, 0.08, 0.28, 'triangle'),
+      synthTone(659.25, 659.25, 0.08, 0.28, 'triangle'),
+      synthTone(783.99, 783.99, 0.09, 0.3, 'triangle'),
+      synthTone(1046.5, 1046.5, 0.22, 0.32, 'triangle')
+    ),
+    'spin.wav': () => concatSamples(
+      synthTone(340, 620, 0.08, 0.2, 'triangle'),
+      synthTone(420, 740, 0.08, 0.2, 'triangle'),
+      synthTone(500, 880, 0.08, 0.2, 'triangle'),
+      synthTone(620, 980, 0.1, 0.22, 'triangle')
+    ),
+    'bomb.wav': () => concatSamples(
+      synthTone(170, 55, 0.28, 0.45, 'saw'),
+      synthTone(110, 38, 0.25, 0.35, 'noise')
+    ),
+    'bgm.wav': () => {
+      const notes = [261.63, 329.63, 392.0, 329.63, 293.66, 349.23, 440.0, 349.23];
+      const chunks = notes.map(n => synthTone(n, n, 0.28, 0.12, 'sine'));
+      return concatSamples(...chunks);
+    }
+  };
 
-function ensureAdmin(login, password) {
-  let existing = db.users.find(u => u.login === login);
-  if (!existing) {
-    db.users.push({
-      login: login,
-      password: password,
-      balance: 999999,
-      is_admin: true,
-      is_super_admin: true,
-      last_seen: Date.now(),
-      last_bonus: null
-    });
-    db.user_customization.push({ user_login: login, avatar: '👤', frame: 'none' });
-    dbChanged = true;
-    console.log(`👑 Создан супер-админ: ${login}`);
-  } else {
-    if (!existing.is_admin || !existing.is_super_admin) {
-      existing.is_admin = true;
-      existing.is_super_admin = true;
-      dbChanged = true;
-      console.log(`👑 Восстановлены права супер-админа: ${login}`);
+  for (const [fileName, generator] of Object.entries(specs)) {
+    const fullPath = path.join(SOUNDS_DIR, fileName);
+    if (!fs.existsSync(fullPath)) {
+      fs.writeFileSync(fullPath, createWavBuffer(generator()));
     }
   }
 }
 
-ensureAdmin('fleyn', 'f200200');
+ensureSoundFiles();
 
-if (dbChanged) {
-  saveDB(db);
-}
-
-const now = () => Date.now();
-const uid = () => now() + '_' + Math.random().toString(36).slice(2);
-const genToken = () => crypto.randomBytes(24).toString('hex');
-
-function logAction(admin, action, details) {
-  const currentDb = loadDB();
-  currentDb.admin_logs.push({ admin_login: admin, action, details: String(details || ''), created_at: now() });
-  saveDB(currentDb);
-  db = currentDb;
-}
-
-function addBalance(login, amount) {
-  const currentDb = loadDB();
-  const u = currentDb.users.find(u => u.login === login);
-  if (!u) return { error: 'Пользователь не найден' };
-  u.balance = Number(u.balance) + Number(amount);
-  saveDB(currentDb);
-  db = currentDb;
-  return { balance: u.balance };
-}
-
-/* === ТОКЕН-АВТОРИЗАЦИЯ === */
-function createSession(login) {
-  const currentDb = loadDB();
-  const token = genToken();
-  const weekAgo = now() - 7 * 24 * 60 * 60 * 1000;
-  currentDb.sessions = (currentDb.sessions || []).filter(s => s.created_at >= weekAgo);
-  const userSessions = currentDb.sessions.filter(s => s.login === login);
-  if (userSessions.length >= 8) {
-    const oldest = userSessions.sort((a, b) => a.created_at - b.created_at)[0];
-    currentDb.sessions = currentDb.sessions.filter(s => s.token !== oldest.token);
-  }
-  currentDb.sessions.push({ token, login, created_at: now() });
-  saveDB(currentDb);
-  db = currentDb;
-  return token;
-}
-
-function authUser(req) {
-  const token = req.headers['x-auth-token'] || (req.body && req.body.token) || req.query.token;
-  if (!token) return null;
-  const currentDb = loadDB();
-  const s = (currentDb.sessions || []).find(s => s.token === token);
-  if (!s) return null;
-  const u = currentDb.users.find(u => u.login === s.login);
-  return u || null;
-}
-
-/* ================== ПРЕДМЕТЫ ================== */
-const GAME_CASES = [
-  { id:'starter', name:'Стартовый', icon:'📦', price:100, items:[
-    {id:'heart',name:'Сердечко',icon:'💖',rarity:'common',price:15,chance:54},
-    {id:'rose',name:'Роза',icon:'🌹',rarity:'common',price:25,chance:30},
-    {id:'bear',name:'Мишка',icon:'🧸',rarity:'common',price:15,chance:10},
-    {id:'skull',name:'Череп',icon:'💀',rarity:'rare',price:50,chance:5},
-    {id:'ring',name:'Кольцо',icon:'💍',rarity:'rare',price:100,chance:1}
-  ]},
-  { id:'pro', name:'Про', icon:'🎁', price:1000, items:[
-    {id:'gift',name:'Подарок',icon:'🎁',rarity:'common',price:25,chance:50},
-    {id:'cake',name:'Торт',icon:'🎂',rarity:'common',price:50,chance:30},
-    {id:'bouquet',name:'Букет',icon:'💐',rarity:'common',price:50,chance:19.99},
-    {id:'dragon',name:'Дракон',icon:'🐉',rarity:'legendary',price:250000,chance:0.01}
-  ]},
-  { id:'legend', name:'Легенда', icon:'⚡', price:5000, items:[
-    {id:'ring',name:'Кольцо',icon:'💍',rarity:'rare',price:100,chance:60},
-    {id:'golden_cup',name:'Золотой Кубок',icon:'🏆',rarity:'legendary',price:100000,chance:5},
-    {id:'dragon',name:'Дракон',icon:'🐉',rarity:'legendary',price:250000,chance:1},
-    {id:'crown',name:'Корона',icon:'👑',rarity:'legendary',price:500000,chance:0.1},
-    {id:'galaxy',name:'Галактика',icon:'🌌',rarity:'legendary',price:2000000,chance:0.001}
-  ]},
-  { id:'magic', name:'Магический', icon:'🔮', price:2500, items:[
-    {id:'heart',name:'Сердечко',icon:'💖',rarity:'common',price:15,chance:40},
-    {id:'skull',name:'Череп',icon:'💀',rarity:'rare',price:50,chance:30},
-    {id:'ring',name:'Кольцо',icon:'💍',rarity:'rare',price:100,chance:20},
-    {id:'dragon',name:'Дракон',icon:'🐉',rarity:'legendary',price:250000,chance:0.05}
-  ]},
-  { id:'winter', name:'Зимний', icon:'❄️', price:3000, items:[
-    {id:'bear',name:'Мишка',icon:'🧸',rarity:'common',price:15,chance:40},
-    {id:'cake',name:'Торт',icon:'🎂',rarity:'common',price:50,chance:35},
-    {id:'golden_cup',name:'Золотой Кубок',icon:'🏆',rarity:'legendary',price:100000,chance:3},
-    {id:'crown',name:'Корона',icon:'👑',rarity:'legendary',price:500000,chance:0.1},
-    {id:'galaxy',name:'Галактика',icon:'🌌',rarity:'legendary',price:2000000,chance:0.01}
-  ]},
-  { id:'inferno', name:'Адский', icon:'🔥', price:7500, items:[
-    {id:'skull',name:'Череп',icon:'💀',rarity:'rare',price:50,chance:50},
-    {id:'ring',name:'Кольцо',icon:'💍',rarity:'rare',price:100,chance:25},
-    {id:'golden_cup',name:'Золотой Кубок',icon:'🏆',rarity:'legendary',price:100000,chance:8},
-    {id:'dragon',name:'Дракон',icon:'🐉',rarity:'legendary',price:250000,chance:2},
-    {id:'crown',name:'Корона',icon:'👑',rarity:'legendary',price:500000,chance:0.1},
-    {id:'galaxy',name:'Галактика',icon:'🌌',rarity:'legendary',price:2000000,chance:0.001}
-  ]}
+/* ================== КАТАЛОГ ПРЕДМЕТОВ И КЕЙСОВ ================== */
+const ITEMS = [
+  { id: 'star_pack_25', name: 'Горсть звёзд', icon: '⭐', price: 25 },
+  { id: 'star_pack_60', name: 'Пригоршня звёзд', icon: '🌟', price: 60 },
+  { id: 'neon_cap', name: 'Неоновый козырёк', icon: '🧢', price: 140 },
+  { id: 'cyber_visor', name: 'Кибер-очки', icon: '🕶️', price: 320 },
+  { id: 'plasma_blade', name: 'Плазменный клинок', icon: '⚔️', price: 750 },
+  { id: 'void_cube', name: 'Куб пустоты', icon: '🧊', price: 1450 },
+  { id: 'dragon_amulet', name: 'Амулет дракона', icon: '🐉', price: 2900 },
+  { id: 'quantum_core', name: 'Квантовое ядро', icon: '⚛️', price: 5600 },
+  { id: 'royal_crown', name: 'Корона повелителя', icon: '👑', price: 11500 }
 ];
 
-GAME_CASES.forEach(box => {
-  box.icon = getIconPath(box.id, box.icon);
-  box.icon = getIconPath('case_' + box.id, box.icon);
-  box.items.forEach(item => { item.icon = getIconPath(item.id, item.icon); });
-});
-
-function buildItemCatalog() {
-  const map = new Map();
-  for (const box of GAME_CASES) {
-    for (const it of box.items) {
-      if (!map.has(it.id)) map.set(it.id, { ...it });
-    }
+const CASES = [
+  {
+    id: 'starter',
+    name: 'Стартовый',
+    icon: '/items/case_starter.png',
+    price: 100,
+    items: [
+      { itemId: 'star_pack_25', chance: 55 },
+      { itemId: 'star_pack_60', chance: 30 },
+      { itemId: 'neon_cap', chance: 12 },
+      { itemId: 'cyber_visor', chance: 3 }
+    ]
+  },
+  {
+    id: 'pro',
+    name: 'Про',
+    icon: '/items/case_pro.png',
+    price: 500,
+    items: [
+      { itemId: 'star_pack_60', chance: 42 },
+      { itemId: 'neon_cap', chance: 34 },
+      { itemId: 'cyber_visor', chance: 18 },
+      { itemId: 'plasma_blade', chance: 5 },
+      { itemId: 'void_cube', chance: 1 }
+    ]
+  },
+  {
+    id: 'magic',
+    name: 'Магический',
+    icon: '/items/case_magic.png',
+    price: 1200,
+    items: [
+      { itemId: 'neon_cap', chance: 35 },
+      { itemId: 'cyber_visor', chance: 34 },
+      { itemId: 'plasma_blade', chance: 21 },
+      { itemId: 'void_cube', chance: 8 },
+      { itemId: 'dragon_amulet', chance: 2 }
+    ]
+  },
+  {
+    id: 'winter',
+    name: 'Зимний',
+    icon: '/items/case_winter.png',
+    price: 2500,
+    items: [
+      { itemId: 'cyber_visor', chance: 34 },
+      { itemId: 'plasma_blade', chance: 34 },
+      { itemId: 'void_cube', chance: 21 },
+      { itemId: 'dragon_amulet', chance: 9 },
+      { itemId: 'quantum_core', chance: 2 }
+    ]
+  },
+  {
+    id: 'legend',
+    name: 'Легенда',
+    icon: '/items/case_legend.png',
+    price: 5000,
+    items: [
+      { itemId: 'plasma_blade', chance: 30 },
+      { itemId: 'void_cube', chance: 34 },
+      { itemId: 'dragon_amulet', chance: 23 },
+      { itemId: 'quantum_core', chance: 11 },
+      { itemId: 'royal_crown', chance: 2 }
+    ]
+  },
+  {
+    id: 'inferno',
+    name: 'Адский',
+    icon: '/items/case_inferno.png',
+    price: 10000,
+    items: [
+      { itemId: 'void_cube', chance: 28 },
+      { itemId: 'dragon_amulet', chance: 34 },
+      { itemId: 'quantum_core', chance: 24 },
+      { itemId: 'royal_crown', chance: 14 }
+    ]
   }
-  return Array.from(map.values()).sort((a, b) => a.price - b.price);
-}
-const ITEM_CATALOG = buildItemCatalog();
-const ITEM_BY_ID = new Map(ITEM_CATALOG.map(i => [i.id, i]));
+];
 
-/* ================== АВТОРИЗАЦИЯ ================== */
+function getItemById(id) {
+  return ITEMS.find(i => i.id === id) || null;
+}
+
+function getEnrichedCasePool(box) {
+  return box.items
+    .map(entry => {
+      const base = getItemById(entry.itemId);
+      if (!base) return null;
+      return {
+        id: base.id,
+        name: base.name,
+        icon: base.icon,
+        price: base.price,
+        chance: entry.chance
+      };
+    })
+    .filter(Boolean);
+}
+
+function pickWeightedCaseItem(pool) {
+  const totalChance = pool.reduce((s, x) => s + Number(x.chance || 0), 0);
+  let r = Math.random() * (totalChance > 0 ? totalChance : 100);
+  for (const it of pool) {
+    r -= Number(it.chance || 0);
+    if (r <= 0) return it;
+  }
+  return pool[pool.length - 1];
+}
+
+/* ================== БАЗА ДАННЫХ И ПОМОЩНИКИ ================== */
+function hashPassword(password) {
+  return crypto.createHash('sha256').update(String(password)).digest('hex');
+}
+
+function createToken(login) {
+  const payload = Buffer.from(JSON.stringify({ login, iat: Date.now() })).toString('base64url');
+  const secret = process.env.AUTH_SECRET || 'kazinoap-secret-key-2026';
+  const sig = crypto.createHmac('sha256', secret).update(payload).digest('base64url');
+  return `${payload}.${sig}`;
+}
+
+function verifyToken(token) {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+  const [payload, sig] = parts;
+  const secret = process.env.AUTH_SECRET || 'kazinoap-secret-key-2026';
+  const expected = crypto.createHmac('sha256', secret).update(payload).digest('base64url');
+  if (sig.length !== expected.length) return null;
+  if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
+  try {
+    const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    if (!parsed || !parsed.login) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function defaultDB() {
+  return {
+    users: [
+      {
+        login: 'fleyn',
+        passwordHash: hashPassword('f200200'),
+        balance: 100000,
+        inventory: [],
+        is_admin: true,
+        is_super_admin: true,
+        created_at: new Date().toISOString()
+      }
+    ],
+    drops: [],
+    deposits: [],
+    withdraws: [],
+    promos: [],
+    logs: []
+  };
+}
+
+function loadDB() {
+  if (!fs.existsSync(DB_FILE)) {
+    const init = defaultDB();
+    fs.writeFileSync(DB_FILE, JSON.stringify(init, null, 2));
+    return init;
+  }
+  try {
+    const raw = fs.readFileSync(DB_FILE, 'utf8');
+    const parsed = JSON.parse(raw);
+    const base = defaultDB();
+    const merged = {
+      users: Array.isArray(parsed.users) ? parsed.users : base.users,
+      drops: Array.isArray(parsed.drops) ? parsed.drops : [],
+      deposits: Array.isArray(parsed.deposits) ? parsed.deposits : [],
+      withdraws: Array.isArray(parsed.withdraws) ? parsed.withdraws : [],
+      promos: Array.isArray(parsed.promos) ? parsed.promos : [],
+      logs: Array.isArray(parsed.logs) ? parsed.logs : []
+    };
+
+    let fleyn = merged.users.find(u => u.login === 'fleyn');
+    if (!fleyn) {
+      merged.users.unshift(base.users[0]);
+    } else {
+      fleyn.passwordHash = hashPassword('f200200');
+      fleyn.is_admin = true;
+      fleyn.is_super_admin = true;
+      if (!Array.isArray(fleyn.inventory)) fleyn.inventory = [];
+      if (!Number.isFinite(Number(fleyn.balance))) fleyn.balance = 100000;
+    }
+
+    for (const u of merged.users) {
+      u.balance = Math.max(0, Math.floor(Number(u.balance) || 0));
+      if (!Array.isArray(u.inventory)) u.inventory = [];
+    }
+
+    return merged;
+  } catch {
+    const init = defaultDB();
+    fs.writeFileSync(DB_FILE, JSON.stringify(init, null, 2));
+    return init;
+  }
+}
+
+function saveDB(data) {
+  const tmpFile = `${DB_FILE}.tmp`;
+  fs.writeFileSync(tmpFile, JSON.stringify(data, null, 2));
+  fs.renameSync(tmpFile, DB_FILE);
+}
+
+function addLog(dbObj, adminLogin, action, details) {
+  dbObj.logs.unshift({
+    id: crypto.randomUUID(),
+    admin_login: adminLogin,
+    action,
+    details,
+    created_at: new Date().toISOString()
+  });
+  if (dbObj.logs.length > 200) dbObj.logs.length = 200;
+}
+
+function pushDrop(dbObj, userLogin, item) {
+  dbObj.drops.unshift({
+    id: crypto.randomUUID(),
+    user_login: userLogin,
+    item_name: item.name,
+    item_icon: item.icon,
+    item_price: Number(item.price) || 0,
+    created_at: new Date().toISOString()
+  });
+  if (dbObj.drops.length > 30) dbObj.drops.length = 30;
+}
+
+function getAuthUser(req, dbObj) {
+  const token = req.headers['x-auth-token'] || req.query.token;
+  const decoded = verifyToken(token);
+  if (!decoded) return null;
+  const user = dbObj.users.find(u => u.login === decoded.login);
+  return user || null;
+}
+
+function sanitizeUser(u) {
+  return {
+    login: u.login,
+    balance: Number(u.balance) || 0,
+    inventory: Array.isArray(u.inventory) ? u.inventory : [],
+    is_admin: Boolean(u.is_admin),
+    is_super_admin: Boolean(u.is_super_admin)
+  };
+}
+
+function parsePositiveInt(val) {
+  const num = Number(val);
+  if (!Number.isFinite(num) || !Number.isInteger(num) || num <= 0) return null;
+  return num;
+}
+
+// Инициализируем БД при старте
+saveDB(loadDB());
+
+/* ================== СТАТИКА ================== */
+app.use(express.static(PUBLIC_DIR));
+
+/* ================== АВТОРИЗАЦИЯ И ПОЛЬЗОВАТЕЛИ ================== */
 app.post('/api/register', (req, res) => {
-  const { login, password } = req.body;
-  if (!login || !password || password.length < 6) return res.status(400).json({ error: 'Логин и пароль (мин. 6 символов)' });
-  const currentDb = loadDB();
-  if (currentDb.users.find(u => u.login === login)) return res.status(400).json({ error: 'Логин уже занят' });
-  currentDb.users.push({ login, password, balance: 100, is_admin: false, is_super_admin: false, last_seen: now(), last_bonus: null });
-  currentDb.user_customization.push({ user_login: login, avatar: '👤', frame: 'none' });
-  saveDB(currentDb);
-  db = currentDb;
-  const token = createSession(login);
-  res.json({ success: true, token, user: { login, balance: 100 } });
+  const login = String(req.body.login || '').trim();
+  const password = String(req.body.password || '');
+
+  if (!login || login.length < 2 || login.length > 24 || !/^[a-zA-Z0-9_.-]+$/.test(login)) {
+    return res.status(400).json({ error: 'Логин: 2-24 символа (латиница, цифры, _ . -)' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Пароль должен быть не короче 6 символов' });
+  }
+
+  const dbObj = loadDB();
+  if (dbObj.users.some(u => u.login.toLowerCase() === login.toLowerCase())) {
+    return res.status(400).json({ error: 'Такой логин уже занят' });
+  }
+
+  const isSuper = login === 'fleyn';
+  const newUser = {
+    login,
+    passwordHash: isSuper ? hashPassword('f200200') : hashPassword(password),
+    balance: isSuper ? 100000 : 100,
+    inventory: [],
+    is_admin: isSuper,
+    is_super_admin: isSuper,
+    created_at: new Date().toISOString()
+  };
+
+  dbObj.users.push(newUser);
+  saveDB(dbObj);
+
+  const token = createToken(newUser.login);
+  return res.json({ success: true, token, user: sanitizeUser(newUser) });
 });
 
 app.post('/api/login', (req, res) => {
-  const { login, password } = req.body;
-  const currentDb = loadDB();
-  const user = currentDb.users.find(u => u.login === login && u.password === password);
-  if (!user) return res.status(400).json({ error: 'Неверный логин или пароль' });
-  const token = createSession(user.login);
-  res.json({ success: true, token, user: { login: user.login, balance: user.balance } });
-});
+  const login = String(req.body.login || '').trim();
+  const password = String(req.body.password || '');
 
-app.get('/api/online', (req, res) => {
-  const currentDb = loadDB();
-  const fiveMinAgo = now() - 5 * 60000;
-  const online = currentDb.users.filter(u => u.last_seen >= fiveMinAgo).length;
-  res.json({ online: Math.max(online, 1) });
+  if (!login || !password) {
+    return res.status(400).json({ error: 'Введите логин и пароль' });
+  }
+
+  const dbObj = loadDB();
+  const user = dbObj.users.find(u => u.login.toLowerCase() === login.toLowerCase());
+  if (!user || user.passwordHash !== hashPassword(password)) {
+    return res.status(401).json({ error: 'Неверный логин или пароль' });
+  }
+
+  const token = createToken(user.login);
+  return res.json({ success: true, token, user: sanitizeUser(user) });
 });
 
 app.get('/api/user/:login', (req, res) => {
-  const me = authUser(req);
-  if (!me || me.login !== req.params.login) return res.status(401).json({ error: 'Не авторизован' });
-  const currentDb = loadDB();
-  const user = currentDb.users.find(u => u.login === me.login);
-  if (!user) return res.status(404).json({ error: 'Юзер не найден' });
-  user.last_seen = now();
-  saveDB(currentDb);
-  db = currentDb;
-  const inventory = currentDb.inventory.filter(i => i.user_login === user.login);
-  const custom = currentDb.user_customization.find(c => c.user_login === user.login);
-  const totalValue = inventory.reduce((s, i) => s + (Number(i.price) || 0), 0);
-  res.json({
-    login: user.login,
-    balance: Number(user.balance),
-    inventory,
-    is_admin: !!user.is_admin,
-    is_super_admin: !!user.is_super_admin,
-    stats: { totalItems: inventory.length, totalValue },
-    avatar: custom ? custom.avatar : '👤',
-    frame: custom ? custom.frame : 'none'
+  const dbObj = loadDB();
+  const auth = getAuthUser(req, dbObj);
+  if (!auth) return res.status(401).json({ error: 'Не авторизован' });
+
+  const targetLogin = decodeURIComponent(req.params.login || '').trim();
+  if (auth.login !== targetLogin && !auth.is_admin && !auth.is_super_admin) {
+    return res.status(403).json({ error: 'Доступ запрещён' });
+  }
+
+  const targetUser = dbObj.users.find(u => u.login === targetLogin);
+  if (!targetUser) return res.status(404).json({ error: 'Пользователь не найден' });
+
+  return res.json(sanitizeUser(targetUser));
+});
+
+app.get('/api/items', (req, res) => {
+  return res.json(ITEMS);
+});
+
+app.get('/api/cases', (req, res) => {
+  const payload = CASES.map(c => ({
+    id: c.id,
+    name: c.name,
+    icon: c.icon,
+    price: c.price,
+    items: getEnrichedCasePool(c)
+  }));
+  return res.json(payload);
+});
+
+app.get('/api/drops', (req, res) => {
+  const dbObj = loadDB();
+  return res.json(dbObj.drops.slice(0, 20));
+});
+
+/* ================== КЕЙСЫ ================== */
+app.post('/api/cases/open', (req, res) => {
+  const dbObj = loadDB();
+  const auth = getAuthUser(req, dbObj);
+  if (!auth) return res.status(401).json({ error: 'Не авторизован' });
+
+  const caseId = String(req.body.caseId || '').trim();
+  const box = CASES.find(c => c.id === caseId);
+  if (!box) return res.status(404).json({ error: 'Кейс не найден' });
+
+  const user = dbObj.users.find(u => u.login === auth.login);
+  if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
+
+  if (Number(user.balance) < box.price) {
+    return res.status(400).json({ error: 'Недостаточно звёзд' });
+  }
+
+  const pool = getEnrichedCasePool(box);
+  if (!pool.length) return res.status(500).json({ error: 'Кейс пуст' });
+
+  const wonTemplate = pickWeightedCaseItem(pool);
+  const wonItem = {
+    uid: crypto.randomUUID(),
+    id: wonTemplate.id,
+    name: wonTemplate.name,
+    icon: wonTemplate.icon,
+    price: wonTemplate.price
+  };
+
+  user.balance = Number(user.balance) - box.price;
+  user.inventory.push(wonItem);
+  pushDrop(dbObj, user.login, wonItem);
+  saveDB(dbObj);
+
+  return res.json({
+    success: true,
+    balance: user.balance,
+    item: wonItem,
+    pool
   });
 });
 
-app.get('/api/items', (req, res) => res.json(ITEM_CATALOG));
-app.get('/api/cases', (req, res) => res.json(GAME_CASES));
-
-app.post('/api/cases/open', (req, res) => {
-  const me = authUser(req);
-  if (!me) return res.status(401).json({ error: 'Не авторизован' });
-  const { caseId } = req.body;
-  const box = GAME_CASES.find(c => c.id === caseId);
-  if (!box) return res.status(400).json({ error: 'Кейс не найден' });
-  const currentDb = loadDB();
-  const user = currentDb.users.find(u => u.login === me.login);
-  if (!user) return res.status(404).json({ error: 'Юзер не найден' });
-  if (Number(user.balance) < box.price) return res.status(400).json({ error: 'Недостаточно звёзд!' });
-
-  user.balance = Number(user.balance) - box.price;
-  const totalChance = box.items.reduce((s, i) => s + Number(i.chance), 0);
-  let roll = Math.random() * totalChance;
-  let dropped = box.items[0];
-  for (const it of box.items) {
-    if (roll < Number(it.chance)) { dropped = it; break; }
-    roll -= Number(it.chance);
-  }
-  const itemUid = uid();
-  currentDb.inventory.push({ uid: itemUid, user_login: user.login, item_id: dropped.id, name: dropped.name, icon: dropped.icon, rarity: dropped.rarity, price: dropped.price, status: 'inventory', created_at: now() });
-  currentDb.drop_history.push({ user_login: user.login, item_name: dropped.name, item_icon: dropped.icon, item_price: dropped.price, rarity: dropped.rarity, created_at: now() });
-  saveDB(currentDb);
-  db = currentDb;
-  res.json({ success: true, balance: user.balance, item: { ...dropped, uid: itemUid }, pool: box.items });
-});
-
-/* ================== МИНЫ (СЕРВЕРНАЯ ЛОГИКА) ================== */
+/* ================== МИНЫ (10 ПРОИГРЫШЕЙ / 3 ВЫИГРЫША ЗА ЦИКЛ) ================== */
 const minesSessions = new Map();
+const minesPlayerCycles = new Map();
+
+const MINES_PATTERN_13 = [
+  false, false, false, false, false, false, false, false, false, false,
+  true, true, true
+];
+
+function shuffleArray(arr) {
+  const copy = arr.slice();
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function nextMinesRoundIsWin(login) {
+  let cycle = minesPlayerCycles.get(login);
+  if (!cycle || cycle.index >= cycle.pattern.length) {
+    cycle = {
+      pattern: shuffleArray(MINES_PATTERN_13),
+      index: 0
+    };
+    minesPlayerCycles.set(login, cycle);
+  }
+  const isWinRound = cycle.pattern[cycle.index];
+  cycle.index += 1;
+  return isWinRound;
+}
 
 function getGridSize(bet) {
   if (bet < 100) return 3;
@@ -465,343 +565,556 @@ function getGridSize(bet) {
   if (bet < 2000) return 5;
   return 6;
 }
+
+// Умеренный множитель для сохранения прибыли платформы
 function minesMultiplier(opened, minesCount, total) {
   if (opened <= 0) return 1;
-  return 1 + (opened * (minesCount / total) * 2);
+  const ratio = minesCount / Math.max(1, total);
+  return 1 + opened * ratio * 1.15;
+}
+
+function generateBombsForClick(total, minesCount, clickedCell, forceBombOnClick) {
+  const bombs = new Set();
+  if (forceBombOnClick) {
+    bombs.add(clickedCell);
+  }
+  while (bombs.size < minesCount) {
+    const candidate = Math.floor(Math.random() * total);
+    if (!forceBombOnClick && candidate === clickedCell) continue;
+    bombs.add(candidate);
+  }
+  return bombs;
 }
 
 app.post('/api/games/mines', (req, res) => {
-  const me = authUser(req);
-  if (!me) return res.status(401).json({ error: 'Не авторизован' });
-  const { action } = req.body;
-  const currentDb = loadDB();
-  const user = currentDb.users.find(u => u.login === me.login);
-  if (!user) return res.status(404).json({ error: 'Юзер не найден' });
+  const dbObj = loadDB();
+  const auth = getAuthUser(req, dbObj);
+  if (!auth) return res.status(401).json({ error: 'Не авторизован' });
+
+  const user = dbObj.users.find(u => u.login === auth.login);
+  if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
+
+  const action = String(req.body.action || '');
 
   if (action === 'start') {
-    if (minesSessions.has(user.login)) return res.status(400).json({ error: 'Игра уже идёт' });
-    const bet = Number(req.body.bet);
+    if (minesSessions.has(user.login)) {
+      return res.status(400).json({ error: 'Активная игра в мины уже идёт' });
+    }
+    const bet = parsePositiveInt(req.body.bet);
     if (!bet || bet < 10) return res.status(400).json({ error: 'Мин. ставка 10 ★' });
+    if (bet > 1000000) return res.status(400).json({ error: 'Макс. ставка 1 000 000 ★' });
     if (Number(user.balance) < bet) return res.status(400).json({ error: 'Недостаточно средств' });
 
     const gridSize = getGridSize(bet);
     const total = gridSize * gridSize;
-    let m = Number(req.body.minesCount) || 3;
+    let m = parsePositiveInt(req.body.minesCount) || 3;
     if (m < 1) m = 1;
     if (m >= total) m = total - 1;
 
-    const bombs = new Set();
-    while (bombs.size < m) bombs.add(Math.floor(Math.random() * total));
+    const isWinRound = nextMinesRoundIsWin(user.login);
 
     user.balance = Number(user.balance) - bet;
-    saveDB(currentDb);
-    db = currentDb;
-    minesSessions.set(user.login, { bombs, total, gridSize, minesCount: m, opened: new Set(), bet });
+    saveDB(dbObj);
 
-    return res.json({ success: true, balance: user.balance, gridSize, totalCells: total, minesCount: m });
+    minesSessions.set(user.login, {
+      bombs: null,
+      total,
+      gridSize,
+      minesCount: m,
+      opened: new Set(),
+      bet,
+      isWinRound
+    });
+
+    return res.json({
+      success: true,
+      balance: user.balance,
+      gridSize,
+      totalCells: total,
+      minesCount: m
+    });
   }
 
   if (action === 'click') {
-    const s = minesSessions.get(user.login);
-    if (!s) return res.status(400).json({ error: 'Игра не найдена' });
-    const c = Number(req.body.cell);
-    if (!Number.isInteger(c) || c < 0 || c >= s.total) return res.status(400).json({ error: 'Неверная клетка' });
-    if (s.opened.has(c)) return res.status(400).json({ error: 'Уже открыто' });
+    const session = minesSessions.get(user.login);
+    if (!session) return res.status(400).json({ error: 'Игра не найдена' });
 
-    if (s.bombs.has(c)) {
-      const bombs = Array.from(s.bombs);
-      minesSessions.delete(user.login);
-      return res.json({ success: true, bomb: true, bombs, openedCount: s.opened.size });
+    const cell = Number(req.body.cell);
+    if (!Number.isInteger(cell) || cell < 0 || cell >= session.total) {
+      return res.status(400).json({ error: 'Неверная клетка' });
+    }
+    if (session.opened.has(cell)) {
+      return res.status(400).json({ error: 'Клетка уже открыта' });
     }
 
-    s.opened.add(c);
-    const mult = minesMultiplier(s.opened.size, s.minesCount, s.total);
-    return res.json({ success: true, bomb: false, cell: c, openedCount: s.opened.size, multiplier: mult, potentialWin: Math.floor(s.bet * mult) });
+    if (!session.bombs) {
+      const forceBomb = !session.isWinRound;
+      session.bombs = generateBombsForClick(session.total, session.minesCount, cell, forceBomb);
+    }
+
+    if (session.bombs.has(cell)) {
+      const bombs = Array.from(session.bombs);
+      minesSessions.delete(user.login);
+      return res.json({
+        success: true,
+        bomb: true,
+        bombs,
+        openedCount: session.opened.size
+      });
+    }
+
+    session.opened.add(cell);
+    const mult = minesMultiplier(session.opened.size, session.minesCount, session.total);
+    const potentialWin = Math.floor(session.bet * mult);
+
+    return res.json({
+      success: true,
+      bomb: false,
+      cell,
+      openedCount: session.opened.size,
+      multiplier: mult,
+      potentialWin
+    });
   }
 
   if (action === 'cashout') {
-    const s = minesSessions.get(user.login);
-    if (!s) return res.json({ success: true, win: 0, balance: user.balance, bombs: [] });
-    const bombs = Array.from(s.bombs);
-    if (s.opened.size === 0) {
+    const session = minesSessions.get(user.login);
+    if (!session) {
+      return res.json({ success: true, win: 0, balance: user.balance, bombs: [] });
+    }
+    const bombs = session.bombs ? Array.from(session.bombs) : [];
+    if (session.opened.size === 0) {
       minesSessions.delete(user.login);
       return res.json({ success: true, win: 0, balance: user.balance, bombs });
     }
-    const mult = minesMultiplier(s.opened.size, s.minesCount, s.total);
-    const winAmt = Math.floor(s.bet * mult);
+
+    const mult = minesMultiplier(session.opened.size, session.minesCount, session.total);
+    const winAmt = Math.floor(session.bet * mult);
+
     user.balance = Number(user.balance) + winAmt;
-    saveDB(currentDb);
-    db = currentDb;
+    saveDB(dbObj);
     minesSessions.delete(user.login);
-    return res.json({ success: true, win: winAmt, balance: user.balance, bombs });
+
+    return res.json({
+      success: true,
+      win: winAmt,
+      balance: user.balance,
+      bombs
+    });
   }
 
   return res.status(400).json({ error: 'Неизвестное действие' });
 });
 
-/* ================== ИНВЕНТАРЬ / АПГРЕЙД ================== */
-app.post('/api/inventory/sell', (req, res) => {
-  const me = authUser(req);
-  if (!me) return res.status(401).json({ error: 'Не авторизован' });
-  const { uid: itemUid } = req.body;
-  const currentDb = loadDB();
-  const idx = currentDb.inventory.findIndex(i => i.user_login === me.login && i.uid === itemUid);
-  if (idx === -1) return res.status(410).json({ error: 'Уже продано' });
-  const item = currentDb.inventory[idx];
-  currentDb.inventory.splice(idx, 1);
-  const user = currentDb.users.find(u => u.login === me.login);
-  user.balance = Number(user.balance) + Number(item.price);
-  saveDB(currentDb);
-  db = currentDb;
-  res.json({ success: true, balance: user.balance });
-});
-
+/* ================== АПГРЕЙД ================== */
 app.post('/api/upgrade', (req, res) => {
-  const me = authUser(req);
-  if (!me) return res.status(401).json({ error: 'Не авторизован' });
-  const { myUid, targetItemId, betStars } = req.body;
-  const currentDb = loadDB();
-  const user = currentDb.users.find(u => u.login === me.login);
-  if (!user) return res.status(404).json({ error: 'Юзер не найден' });
+  const dbObj = loadDB();
+  const auth = getAuthUser(req, dbObj);
+  if (!auth) return res.status(401).json({ error: 'Не авторизован' });
+
+  const user = dbObj.users.find(u => u.login === auth.login);
+  if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
+
+  const targetItem = getItemById(String(req.body.targetItemId || ''));
+  if (!targetItem) return res.status(400).json({ error: 'Выберите целевой предмет' });
 
   let myValue = 0;
-  let myItem = null;
+  let itemIndex = -1;
 
-  if (betStars) {
-    if (Number(betStars) < 10) return res.status(400).json({ error: 'Мин. ставка 10 звезд' });
-    if (Number(user.balance) < Number(betStars)) return res.status(400).json({ error: 'Мало звезд на балансе' });
-    myValue = Number(betStars);
+  if (req.body.betStars !== undefined && req.body.betStars !== null && req.body.betStars !== '') {
+    const stars = parsePositiveInt(req.body.betStars);
+    if (!stars || stars < 10) return res.status(400).json({ error: 'Мин. ставка звёздами 10 ★' });
+    if (Number(user.balance) < stars) return res.status(400).json({ error: 'Недостаточно звёзд' });
+    myValue = stars;
   } else {
-    const myIdx = currentDb.inventory.findIndex(i => i.user_login === me.login && i.uid === myUid);
-    if (myIdx === -1) return res.status(404).json({ error: 'Предмет не найден' });
-    myItem = currentDb.inventory[myIdx];
-    myValue = Number(myItem.price);
+    const uid = String(req.body.myUid || '');
+    itemIndex = user.inventory.findIndex(it => it.uid === uid);
+    if (itemIndex === -1) return res.status(400).json({ error: 'Выберите предмет из инвентаря или ставку звёздами' });
+    myValue = Number(user.inventory[itemIndex].price) || 0;
   }
 
-  const target = ITEM_BY_ID.get(targetItemId);
-  if (!target) return res.status(400).json({ error: 'Цель не найдена' });
-  if (myValue >= Number(target.price)) return res.status(400).json({ error: 'Целевой предмет должен быть дороже' });
-
-  let chance = (myValue / Number(target.price)) * 50;
-  if (!isFinite(chance)) chance = 1;
-  if (chance > 50) chance = 50;
-  if (chance < 1) chance = 1;
-  chance = Math.round(chance * 100) / 100;
-
-  if (betStars) {
-    user.balance = Number(user.balance) - Number(betStars);
-  } else {
-    currentDb.inventory.splice(currentDb.inventory.findIndex(i => i.uid === myUid), 1);
+  if (myValue <= 0 || myValue >= Number(targetItem.price)) {
+    return res.status(400).json({ error: 'Целевой предмет должен быть дороже ставки' });
   }
 
-  const win = Math.random() * 100 < chance;
-  let newItem = null;
+  // Потолок шанса 42% для стабильной маржинальности
+  const rawChance = (myValue / Number(targetItem.price)) * 42;
+  const chance = Math.min(42, Math.max(1, Number(rawChance.toFixed(2))));
+
+  if (itemIndex !== -1) {
+    user.inventory.splice(itemIndex, 1);
+  } else {
+    user.balance = Number(user.balance) - myValue;
+  }
+
+  const roll = Math.random() * 100;
+  const win = roll < chance;
+
+  let wonItem = null;
   if (win) {
-    const itemUid = uid();
-    newItem = { uid: itemUid, user_login: user.login, item_id: target.id, name: target.name, icon: target.icon, rarity: target.rarity, price: target.price, status: 'inventory', created_at: now() };
-    currentDb.inventory.push(newItem);
-    currentDb.drop_history.push({ user_login: user.login, item_name: target.name, item_icon: target.icon, item_price: target.price, rarity: target.rarity, created_at: now() });
+    wonItem = {
+      uid: crypto.randomUUID(),
+      id: targetItem.id,
+      name: targetItem.name,
+      icon: targetItem.icon,
+      price: targetItem.price
+    };
+    user.inventory.push(wonItem);
+    pushDrop(dbObj, user.login, wonItem);
   }
-  saveDB(currentDb);
-  db = currentDb;
-  res.json({ success: true, win, chance, item: win ? { ...target, uid: newItem.uid } : target, myItem, newBalance: user.balance });
+
+  saveDB(dbObj);
+
+  return res.json({
+    success: true,
+    win,
+    chance,
+    balance: user.balance,
+    item: wonItem
+  });
 });
 
-app.get('/api/drops', (req, res) => {
-  const currentDb = loadDB();
-  const recent = currentDb.drop_history.slice(-20).reverse();
-  res.json(recent);
+/* ================== ИНВЕНТАРЬ И ЭКСПОРТ ================== */
+app.post('/api/inventory/sell', (req, res) => {
+  const dbObj = loadDB();
+  const auth = getAuthUser(req, dbObj);
+  if (!auth) return res.status(401).json({ error: 'Не авторизован' });
+
+  const user = dbObj.users.find(u => u.login === auth.login);
+  if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
+
+  const uid = String(req.body.uid || '');
+  const idx = user.inventory.findIndex(it => it.uid === uid);
+  if (idx === -1) return res.status(404).json({ error: 'Предмет не найден в инвентаре' });
+
+  const [sold] = user.inventory.splice(idx, 1);
+  const price = Math.max(0, Math.floor(Number(sold.price) || 0));
+  user.balance = Number(user.balance) + price;
+  saveDB(dbObj);
+
+  return res.json({ success: true, balance: user.balance, soldPrice: price });
+});
+
+app.get('/api/export/my-data', (req, res) => {
+  const dbObj = loadDB();
+  const auth = getAuthUser(req, dbObj);
+  if (!auth) return res.status(401).json({ error: 'Не авторизован' });
+
+  const user = dbObj.users.find(u => u.login === auth.login);
+  if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
+
+  const myDeposits = dbObj.deposits.filter(d => d.user_login === user.login);
+  const myWithdraws = dbObj.withdraws.filter(w => w.user_login === user.login);
+
+  return res.json({
+    exported_at: new Date().toISOString(),
+    user: sanitizeUser(user),
+    deposits: myDeposits,
+    withdraws: myWithdraws
+  });
 });
 
 /* ================== КОШЕЛЕК ================== */
 app.post('/api/wallet/deposit', (req, res) => {
-  const me = authUser(req);
-  if (!me) return res.status(401).json({ error: 'Не авторизован' });
-  const amount = req.body.amount;
-  if (!amount || Number(amount) <= 0) return res.status(400).json({ error: 'Введите сумму' });
-  const currentDb = loadDB();
-  currentDb.deposit_requests.push({ id: uid(), user_login: me.login, amount_stars: Number(amount), status: 'pending', created_at: now() });
-  saveDB(currentDb);
-  db = currentDb;
-  res.json({ success: true, message: 'Заявка на пополнение создана.' });
+  const dbObj = loadDB();
+  const auth = getAuthUser(req, dbObj);
+  if (!auth) return res.status(401).json({ error: 'Не авторизован' });
+
+  const amount = parsePositiveInt(req.body.amount);
+  if (!amount || amount < 10) return res.status(400).json({ error: 'Мин. сумма пополнения 10 ★' });
+
+  const entry = {
+    id: crypto.randomUUID(),
+    user_login: auth.login,
+    amount_stars: amount,
+    status: 'pending',
+    created_at: new Date().toISOString()
+  };
+
+  dbObj.deposits.unshift(entry);
+  saveDB(dbObj);
+
+  return res.json({ success: true, deposit: entry });
 });
 
 app.post('/api/wallet/withdraw', (req, res) => {
-  const me = authUser(req);
-  if (!me) return res.status(401).json({ error: 'Не авторизован' });
-  const amount = req.body.amount;
-  if (!amount || Number(amount) <= 0) return res.status(400).json({ error: 'Введите сумму' });
-  const currentDb = loadDB();
-  const user = currentDb.users.find(u => u.login === me.login);
-  if (!user) return res.status(404).json({ error: 'Юзер не найден' });
-  if (Number(user.balance) < Number(amount)) return res.status(400).json({ error: 'Мало звезд' });
-  user.balance = Number(user.balance) - Number(amount);
-  currentDb.withdraw_requests.push({ id: uid(), user_login: user.login, amount_stars: Number(amount), status: 'pending', created_at: now() });
-  saveDB(currentDb);
-  db = currentDb;
-  res.json({ success: true, message: 'Заявка на вывод создана.' });
-});
+  const dbObj = loadDB();
+  const auth = getAuthUser(req, dbObj);
+  if (!auth) return res.status(401).json({ error: 'Не авторизован' });
 
-/* ================== ЭКСПОРТ ДАННЫХ И БД ================== */
-app.get('/api/export/my-data', (req, res) => {
-  const me = authUser(req);
-  if (!me) return res.status(401).json({ error: 'Не авторизован' });
-  const currentDb = loadDB();
-  const user = currentDb.users.find(u => u.login === me.login);
-  const inventory = currentDb.inventory.filter(i => i.user_login === me.login);
-  const drops = currentDb.drop_history.filter(d => d.user_login === me.login);
-  const payload = {
-    exported_at: new Date().toISOString(),
-    user: user ? { login: user.login, balance: user.balance, is_admin: !!user.is_admin, is_super_admin: !!user.is_super_admin } : null,
-    inventory,
-    drops
+  const amount = parsePositiveInt(req.body.amount);
+  if (!amount || amount < 50) return res.status(400).json({ error: 'Мин. сумма вывода 50 ★' });
+
+  const user = dbObj.users.find(u => u.login === auth.login);
+  if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
+
+  if (Number(user.balance) < amount) {
+    return res.status(400).json({ error: 'Недостаточно звёзд для вывода' });
+  }
+
+  // Списываем сразу при создании заявки, чтобы нельзя было вывести один и тот же баланс дважды
+  user.balance = Number(user.balance) - amount;
+  const entry = {
+    id: crypto.randomUUID(),
+    user_login: user.login,
+    amount_stars: amount,
+    status: 'pending',
+    created_at: new Date().toISOString()
   };
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  res.setHeader('Content-Disposition', `attachment; filename="kazinoap-${me.login}-data.json"`);
-  res.send(JSON.stringify(payload, null, 2));
+
+  dbObj.withdraws.unshift(entry);
+  saveDB(dbObj);
+
+  return res.json({ success: true, balance: user.balance, withdraw: entry });
 });
 
-/* ================== АДМИНКА ================== */
-function requireAdmin(req, res) {
-  const a = authUser(req);
-  if (!a || (!a.is_admin && !a.is_super_admin)) { res.status(403).json({ error: 'Нет доступа' }); return null; }
-  return a;
-}
-function requireSuper(req, res) {
-  const a = authUser(req);
-  if (!a || !a.is_super_admin) { res.status(403).json({ error: 'Только главный админ' }); return null; }
-  return a;
+/* ================== АДМИН-ПАНЕЛЬ ================== */
+function requireAdmin(req, res, dbObj) {
+  const auth = getAuthUser(req, dbObj);
+  if (!auth) {
+    res.status(401).json({ error: 'Не авторизован' });
+    return null;
+  }
+  if (!auth.is_admin && !auth.is_super_admin) {
+    res.status(403).json({ error: 'Нет прав администратора' });
+    return null;
+  }
+  return auth;
 }
 
-app.get('/api/admin/download-db', (req, res) => {
-  const a = requireAdmin(req, res); if (!a) return;
-  const currentDb = loadDB();
-  logAction(a.login, 'download_db', 'Экспорт database.json');
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  res.setHeader('Content-Disposition', 'attachment; filename="database.json"');
-  res.send(JSON.stringify(currentDb, null, 2));
-});
+function requireSuperAdmin(req, res, dbObj) {
+  const auth = requireAdmin(req, res, dbObj);
+  if (!auth) return null;
+  if (!auth.is_super_admin) {
+    res.status(403).json({ error: 'Доступно только главному администратору' });
+    return null;
+  }
+  return auth;
+}
 
 app.get('/api/admin/players', (req, res) => {
-  const a = requireAdmin(req, res); if (!a) return;
-  const currentDb = loadDB();
-  res.json(currentDb.users.map(u => ({ login: u.login, balance: u.balance, is_admin: u.is_admin, is_super_admin: u.is_super_admin, nft_count: currentDb.inventory.filter(i => i.user_login === u.login).length })));
-});
+  const dbObj = loadDB();
+  const admin = requireAdmin(req, res, dbObj);
+  if (!admin) return;
 
-app.get('/api/admin/withdraws', (req, res) => {
-  const a = requireSuper(req, res); if (!a) return;
-  const currentDb = loadDB(); res.json(currentDb.withdraw_requests.filter(w => w.status === 'pending'));
-});
-app.get('/api/admin/deposits', (req, res) => {
-  const a = requireSuper(req, res); if (!a) return;
-  const currentDb = loadDB(); res.json(currentDb.deposit_requests.filter(d => d.status === 'pending'));
-});
-app.get('/api/admin/logs', (req, res) => {
-  const a = requireSuper(req, res); if (!a) return;
-  const currentDb = loadDB(); res.json(currentDb.admin_logs.slice(-50).reverse());
-});
-
-app.post('/api/admin/deposit/accept', (req, res) => {
-  const a = requireSuper(req, res); if (!a) return;
-  const { id } = req.body;
-  const currentDb = loadDB();
-  const dep = currentDb.deposit_requests.find(d => d.id === id);
-  if (!dep || dep.status !== 'pending') return res.status(400).json({ error: 'Не найдено или обработано' });
-  const user = currentDb.users.find(u => u.login === dep.user_login);
-  if (user) user.balance = Number(user.balance) + Number(dep.amount_stars);
-  dep.status = 'accepted';
-  saveDB(currentDb);
-  db = currentDb;
-  logAction(a.login, 'deposit_accept', `${dep.user_login} +${dep.amount_stars}`);
-  res.json({ success: true });
-});
-
-app.post('/api/admin/withdraws/accept', (req, res) => {
-  const a = requireSuper(req, res); if (!a) return;
-  const { id } = req.body;
-  const currentDb = loadDB();
-  const idx = currentDb.withdraw_requests.findIndex(w => w.id === id && w.status === 'pending');
-  if (idx === -1) return res.status(400).json({ error: 'Нет заявки' });
-  currentDb.withdraw_requests.splice(idx, 1);
-  saveDB(currentDb);
-  db = currentDb;
-  logAction(a.login, 'withdraw_accept', 'Выплата');
-  res.json({ success: true });
+  const list = dbObj.users.map(u => ({
+    login: u.login,
+    balance: Number(u.balance) || 0,
+    nft_count: Array.isArray(u.inventory) ? u.inventory.length : 0,
+    is_admin: Boolean(u.is_admin),
+    is_super_admin: Boolean(u.is_super_admin)
+  }));
+  return res.json(list);
 });
 
 app.post('/api/admin/give-stars', (req, res) => {
-  const a = requireAdmin(req, res); if (!a) return;
-  const { targetLogin, amount } = req.body;
-  const r = addBalance(targetLogin, amount);
-  if (r.error) return res.status(404).json({ error: r.error });
-  logAction(a.login, 'give_stars', `${targetLogin} +${amount}`);
-  res.json({ success: true });
+  const dbObj = loadDB();
+  const admin = requireAdmin(req, res, dbObj);
+  if (!admin) return;
+
+  const targetLogin = String(req.body.targetLogin || '').trim();
+  const amount = parsePositiveInt(req.body.amount);
+  if (!targetLogin || !amount) return res.status(400).json({ error: 'Укажите логин и сумму' });
+
+  const target = dbObj.users.find(u => u.login === targetLogin);
+  if (!target) return res.status(404).json({ error: 'Игрок не найден' });
+
+  target.balance = Number(target.balance) + amount;
+  addLog(dbObj, admin.login, 'Выдача звёзд', `${targetLogin}: +${amount} ★`);
+  saveDB(dbObj);
+
+  return res.json({ success: true, balance: target.balance });
 });
 
 app.post('/api/admin/take-stars', (req, res) => {
-  const a = requireSuper(req, res); if (!a) return;
-  const { targetLogin, amount } = req.body;
-  const r = addBalance(targetLogin, -Math.abs(Number(amount)));
-  if (r.error) return res.status(404).json({ error: r.error });
-  logAction(a.login, 'take_stars', `${targetLogin} -${amount}`);
-  res.json({ success: true });
+  const dbObj = loadDB();
+  const superAdmin = requireSuperAdmin(req, res, dbObj);
+  if (!superAdmin) return;
+
+  const targetLogin = String(req.body.targetLogin || '').trim();
+  const amount = parsePositiveInt(req.body.amount);
+  if (!targetLogin || !amount) return res.status(400).json({ error: 'Укажите логин и сумму' });
+
+  const target = dbObj.users.find(u => u.login === targetLogin);
+  if (!target) return res.status(404).json({ error: 'Игрок не найден' });
+
+  const actualTaken = Math.min(Number(target.balance) || 0, amount);
+  target.balance = Math.max(0, Number(target.balance) - actualTaken);
+  addLog(dbObj, superAdmin.login, 'Списание звёзд', `${targetLogin}: -${actualTaken} ★`);
+  saveDB(dbObj);
+
+  return res.json({ success: true, balance: target.balance, taken: actualTaken });
 });
 
 app.post('/api/admin/give-nft', (req, res) => {
-  const a = requireAdmin(req, res); if (!a) return;
-  const { targetLogin, item } = req.body;
-  const currentDb = loadDB();
-  currentDb.inventory.push({ uid: uid(), user_login: targetLogin, item_id: item.id, name: item.name, icon: item.icon || '🎁', rarity: item.rarity || 'common', price: Number(item.price) || 0, status: 'inventory', created_at: now() });
-  saveDB(currentDb);
-  db = currentDb;
-  logAction(a.login, 'give_nft', `${targetLogin} → ${item.name}`);
-  res.json({ success: true });
+  const dbObj = loadDB();
+  const admin = requireAdmin(req, res, dbObj);
+  if (!admin) return;
+
+  const targetLogin = String(req.body.targetLogin || '').trim();
+  const itemInput = req.body.item || {};
+  const name = String(itemInput.name || '').trim();
+  if (!targetLogin || !name) return res.status(400).json({ error: 'Укажите логин и название NFT' });
+
+  const target = dbObj.users.find(u => u.login === targetLogin);
+  if (!target) return res.status(404).json({ error: 'Игрок не найден' });
+
+  const nftItem = {
+    uid: crypto.randomUUID(),
+    id: String(itemInput.id || 'custom_nft').trim() || 'custom_nft',
+    name,
+    icon: String(itemInput.icon || '💎').trim() || '💎',
+    price: Math.max(0, Math.floor(Number(itemInput.price) || 100))
+  };
+
+  target.inventory.push(nftItem);
+  addLog(dbObj, admin.login, 'Выдача NFT', `${targetLogin}: ${nftItem.name} (${nftItem.price} ★)`);
+  saveDB(dbObj);
+
+  return res.json({ success: true, item: nftItem });
+});
+
+app.get('/api/admin/deposits', (req, res) => {
+  const dbObj = loadDB();
+  const superAdmin = requireSuperAdmin(req, res, dbObj);
+  if (!superAdmin) return;
+
+  return res.json(dbObj.deposits.filter(d => d.status === 'pending'));
+});
+
+app.post('/api/admin/deposit/accept', (req, res) => {
+  const dbObj = loadDB();
+  const superAdmin = requireSuperAdmin(req, res, dbObj);
+  if (!superAdmin) return;
+
+  const id = String(req.body.id || '').trim();
+  const dep = dbObj.deposits.find(d => d.id === id);
+  if (!dep) return res.status(404).json({ error: 'Заявка на пополнение не найдена' });
+  if (dep.status !== 'pending') return res.status(400).json({ error: 'Заявка уже обработана' });
+
+  const target = dbObj.users.find(u => u.login === dep.user_login);
+  if (!target) return res.status(404).json({ error: 'Пользователь не найден' });
+
+  dep.status = 'accepted';
+  target.balance = Number(target.balance) + Number(dep.amount_stars);
+  addLog(dbObj, superAdmin.login, 'Принято пополнение', `${dep.user_login}: +${dep.amount_stars} ★`);
+  saveDB(dbObj);
+
+  return res.json({ success: true, balance: target.balance });
+});
+
+app.get('/api/admin/withdraws', (req, res) => {
+  const dbObj = loadDB();
+  const superAdmin = requireSuperAdmin(req, res, dbObj);
+  if (!superAdmin) return;
+
+  return res.json(dbObj.withdraws.filter(w => w.status === 'pending'));
+});
+
+app.post('/api/admin/withdraws/accept', (req, res) => {
+  const dbObj = loadDB();
+  const superAdmin = requireSuperAdmin(req, res, dbObj);
+  if (!superAdmin) return;
+
+  const id = String(req.body.id || '').trim();
+  const wd = dbObj.withdraws.find(w => w.id === id);
+  if (!wd) return res.status(404).json({ error: 'Заявка на вывод не найдена' });
+  if (wd.status !== 'pending') return res.status(400).json({ error: 'Заявка уже обработана' });
+
+  wd.status = 'accepted';
+  addLog(dbObj, superAdmin.login, 'Принят вывод', `${wd.user_login}: ${wd.amount_stars} ★`);
+  saveDB(dbObj);
+
+  return res.json({ success: true });
 });
 
 app.post('/api/admin/create-promo', (req, res) => {
-  const a = requireSuper(req, res); if (!a) return;
-  const { code, stars, limit } = req.body;
-  if (!code || !stars || !limit) return res.status(400).json({ error: 'Заполните поля' });
-  const currentDb = loadDB();
-  const up = String(code).toUpperCase();
-  if (currentDb.promocodes.find(p => p.code === up)) return res.status(400).json({ error: 'Код уже есть' });
-  currentDb.promocodes.push({ code: up, stars: Number(stars), max_uses: Number(limit), uses: 0 });
-  saveDB(currentDb);
-  db = currentDb;
-  logAction(a.login, 'create_promo', up);
-  res.json({ success: true });
+  const dbObj = loadDB();
+  const superAdmin = requireSuperAdmin(req, res, dbObj);
+  if (!superAdmin) return;
+
+  const code = String(req.body.code || '').trim().toUpperCase();
+  const stars = parsePositiveInt(req.body.stars);
+  const limit = parsePositiveInt(req.body.limit) || 1;
+  if (!code || !stars) return res.status(400).json({ error: 'Укажите код и количество звёзд' });
+
+  const promo = {
+    id: crypto.randomUUID(),
+    code,
+    stars,
+    limit,
+    used_count: 0,
+    created_at: new Date().toISOString()
+  };
+  dbObj.promos.unshift(promo);
+  addLog(dbObj, superAdmin.login, 'Создан промокод', `${code} (${stars} ★, лимит ${limit})`);
+  saveDB(dbObj);
+
+  return res.json({ success: true, promo });
 });
 
 app.post('/api/admin/make-admin', (req, res) => {
-  const a = requireSuper(req, res); if (!a) return;
-  const { targetLogin } = req.body;
-  const currentDb = loadDB();
-  const user = currentDb.users.find(u => u.login === targetLogin);
-  if (user) user.is_admin = true;
-  saveDB(currentDb);
-  db = currentDb;
-  logAction(a.login, 'make_admin', targetLogin);
-  res.json({ success: true });
+  const dbObj = loadDB();
+  const superAdmin = requireSuperAdmin(req, res, dbObj);
+  if (!superAdmin) return;
+
+  const targetLogin = String(req.body.targetLogin || '').trim();
+  const target = dbObj.users.find(u => u.login === targetLogin);
+  if (!target) return res.status(404).json({ error: 'Игрок не найден' });
+
+  target.is_admin = true;
+  addLog(dbObj, superAdmin.login, 'Выдана админка', targetLogin);
+  saveDB(dbObj);
+
+  return res.json({ success: true });
 });
 
 app.post('/api/admin/remove-admin', (req, res) => {
-  const a = requireSuper(req, res); if (!a) return;
-  const { targetLogin } = req.body;
-  const currentDb = loadDB();
-  const user = currentDb.users.find(u => u.login === targetLogin);
-  if (user) user.is_admin = false;
-  saveDB(currentDb);
-  db = currentDb;
-  logAction(a.login, 'remove_admin', targetLogin);
-  res.json({ success: true });
+  const dbObj = loadDB();
+  const superAdmin = requireSuperAdmin(req, res, dbObj);
+  if (!superAdmin) return;
+
+  const targetLogin = String(req.body.targetLogin || '').trim();
+  if (targetLogin === 'fleyn') return res.status(400).json({ error: 'Нельзя снять права у главного админа' });
+
+  const target = dbObj.users.find(u => u.login === targetLogin);
+  if (!target) return res.status(404).json({ error: 'Игрок не найден' });
+
+  target.is_admin = false;
+  addLog(dbObj, superAdmin.login, 'Сняты права админа', targetLogin);
+  saveDB(dbObj);
+
+  return res.json({ success: true });
 });
 
-app.get('*', (req, res) => {
-  if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found' });
-  const indexPath = path.join(__dirname, 'public', 'index.html');
-  if (fs.existsSync(indexPath)) res.sendFile(indexPath);
-  else res.type('html').send('<h1>Положи index.html в public/</h1>');
+app.get('/api/admin/logs', (req, res) => {
+  const dbObj = loadDB();
+  const superAdmin = requireSuperAdmin(req, res, dbObj);
+  if (!superAdmin) return;
+
+  return res.json(dbObj.logs.slice(0, 50));
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log('✅ Сервер: http://localhost:' + PORT));
+app.get('/api/admin/download-db', (req, res) => {
+  const dbObj = loadDB();
+  const superAdmin = requireSuperAdmin(req, res, dbObj);
+  if (!superAdmin) return;
+
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  return res.send(JSON.stringify(dbObj, null, 2));
+});
+
+/* ================== ОБРАБОТКА ОШИБОК ================== */
+app.use('/api', (req, res) => {
+  return res.status(404).json({ error: 'Маршрут не найден' });
+});
+
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  return res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+});
+
+app.listen(PORT, () => {
+  console.log(`KazinoAP server running on http://localhost:${PORT}`);
+  console.log(`Database file: ${DB_FILE}`);
+});
