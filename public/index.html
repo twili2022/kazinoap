@@ -174,11 +174,11 @@
   .wallet-balance-box {
     display: flex; align-items: center; justify-content: space-between;
     background: var(--card-2); border: 1px solid var(--border); border-radius: 14px;
-    padding: 12px 14px; margin-bottom: 12px;
+    padding: 12px 14px; margin-bottom: 14px;
   }
-  .wallet-balance-label { font-size: 13px; font-weight: 700; color: var(--muted); }
+  .wallet-balance-label { font-size: 14px; font-weight: 800; color: var(--muted); }
   .wallet-balance-value { font-size: 18px; font-weight: 900; color: var(--accent-2); }
-  .wallet-card input, .profile-card input { margin-bottom: 10px; }
+  .wallet-card input { margin-bottom: 10px; }
 
   .wallpaper-presets {
     display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px;
@@ -333,9 +333,8 @@
   </div>
   <div style="padding: 0 16px;">
     <div class="wallet-card">
-      <h3>Баланс</h3>
       <div class="wallet-balance-box">
-        <span class="wallet-balance-label">Текущий баланс</span>
+        <span class="wallet-balance-label">Баланс</span>
         <span class="wallet-balance-value" id="walletBalanceValue">0 ★</span>
       </div>
       <h3>Пополнение</h3>
@@ -383,11 +382,12 @@
         <button class="btn-secondary" id="btnWallpaperDefault">Неон по умолчанию</button>
         <button class="btn-secondary" id="btnWallpaperForest">Глубокий лес</button>
       </div>
-      <input type="url" id="customWallpaperUrl" placeholder="Вставьте ссылку на картинку (https://...)">
-      <div style="display:flex; gap:8px;">
-        <button class="btn-main" id="btnApplyWallpaper">Применить обои</button>
-        <button class="btn-secondary" id="btnResetWallpaper">Сбросить</button>
-      </div>
+      <label class="btn-secondary" for="customWallpaperFile" style="display:block; text-align:center; margin-bottom:10px; cursor:pointer;">
+        Выбрать из галереи
+      </label>
+      <input type="file" id="customWallpaperFile" accept="image/*" style="display:none;">
+      <div id="wallpaperFileName" style="font-size:12px; color:var(--muted); margin-bottom:10px;">Файл не выбран</div>
+      <button class="btn-secondary" id="btnResetWallpaper" style="width:100%;">Сбросить обои</button>
     </div>
   </div>
 </div>
@@ -508,25 +508,19 @@ function setSoundPrefs({ sfx, bgm }) {
   syncAudioUI();
 }
 
-function applyWallpaper(urlOrPreset) {
-  const clean = (urlOrPreset || '').trim();
-  if (!clean) {
-    state.wallpaper = '';
+function setWallpaperBackground(cssValue, savePersistent = true) {
+  state.wallpaper = cssValue || '';
+  document.documentElement.style.setProperty('--custom-wallpaper', cssValue || 'none');
+  if (!savePersistent) return;
+  if (!cssValue) {
     localStorage.removeItem('kazino_wallpaper');
-    document.documentElement.style.setProperty('--custom-wallpaper', 'none');
     return;
   }
-  if (clean.startsWith('linear-gradient') || clean.startsWith('radial-gradient')) {
-    state.wallpaper = clean;
-    localStorage.setItem('kazino_wallpaper', clean);
-    document.documentElement.style.setProperty('--custom-wallpaper', clean);
-    return;
+  try {
+    localStorage.setItem('kazino_wallpaper', cssValue);
+  } catch (err) {
+    showToast('Обои применены (без сохранения после перезагрузки: файл большой)');
   }
-  const safeUrl = clean.replace(/"/g, '');
-  const cssVal = `linear-gradient(rgba(4, 13, 8, 0.72), rgba(4, 13, 8, 0.85)), url("${safeUrl}")`;
-  state.wallpaper = cssVal;
-  localStorage.setItem('kazino_wallpaper', cssVal);
-  document.documentElement.style.setProperty('--custom-wallpaper', cssVal);
 }
 
 function showToast(msg) {
@@ -933,7 +927,7 @@ $('btnWalletWithdraw').onclick = async () => {
   await refreshUser();
 };
 
-/* ПРОФИЛЬ, ОБОИ И ЗВУКИ */
+/* ПРОФИЛЬ, ОБОИ ИЗ ГАЛЕРЕИ И ЗВУКИ */
 $('btnAuthOpen').onclick = () => { playSfx('click'); openModal('authModal'); };
 $('btnProfileAuth').onclick = () => { playSfx('click'); openModal('authModal'); };
 $('btnSoundSettings').onclick = () => { playSfx('click'); openModal('soundModal'); };
@@ -983,31 +977,48 @@ $('toggleSfxModal').addEventListener('change', e => setSoundPrefs({ sfx: e.targe
 $('toggleBgmProfile').addEventListener('change', e => setSoundPrefs({ bgm: e.target.checked }));
 $('toggleBgmModal').addEventListener('change', e => setSoundPrefs({ bgm: e.target.checked }));
 
-$('btnApplyWallpaper').onclick = () => {
-  const url = $('customWallpaperUrl').value.trim();
-  if (!url) return showToast('Введите ссылку на картинку');
-  if (!/^https?:\/\//i.test(url)) return showToast('Ссылка должна начинаться с http:// или https://');
-  playSfx('click');
-  applyWallpaper(url);
-  showToast('Обои применены');
-};
+$('customWallpaperFile').addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    return showToast('Выберите файл изображения');
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const dataUrl = String(reader.result || '');
+    const cssVal = `linear-gradient(rgba(4, 13, 8, 0.72), rgba(4, 13, 8, 0.85)), url("${dataUrl}")`;
+    $('wallpaperFileName').textContent = `Выбрано: ${file.name}`;
+    playSfx('win');
+    setWallpaperBackground(cssVal, true);
+    showToast('Обои из галереи установлены');
+  };
+  reader.readAsDataURL(file);
+});
 
 $('btnResetWallpaper').onclick = () => {
   playSfx('click');
-  $('customWallpaperUrl').value = '';
-  applyWallpaper('');
+  $('customWallpaperFile').value = '';
+  $('wallpaperFileName').textContent = 'Файл не выбран';
+  setWallpaperBackground('', true);
   showToast('Обои сброшены');
 };
 
 $('btnWallpaperDefault').onclick = () => {
   playSfx('click');
-  applyWallpaper('');
+  $('customWallpaperFile').value = '';
+  $('wallpaperFileName').textContent = 'Файл не выбран';
+  setWallpaperBackground('', true);
   showToast('Установлена неон-тема по умолчанию');
 };
 
 $('btnWallpaperForest').onclick = () => {
   playSfx('click');
-  applyWallpaper('radial-gradient(circle at 20% 15%, rgba(22, 163, 74, 0.35) 0%, rgba(5, 46, 22, 0.92) 55%, #020a05 100%)');
+  $('customWallpaperFile').value = '';
+  $('wallpaperFileName').textContent = 'Фон: Глубокий лес';
+  setWallpaperBackground(
+    'radial-gradient(circle at 20% 15%, rgba(22, 163, 74, 0.35) 0%, rgba(5, 46, 22, 0.92) 55%, #020a05 100%)',
+    true
+  );
   showToast('Установлен фон «Глубокий лес»');
 };
 
