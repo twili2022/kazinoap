@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>TagenGame</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#090510;
+  --card:#160d24;
+  --card-2:#201334;
+  --card-3:#2c1947;
+  --border:#45276e;
+  --border-soft:#58338c;
+  --text:#ffffff;
+  --dim:#b8a8d1;
+  --accent:#c77dff;
+  --accent-bright:#e0aaff;
+  --accent-dk:#7b2cbf;
+  --cyan:#38bdf8;
+  --gold:#ffd700;
+  --ok:#10b981;
+  --bad:#ef4444;
+  --neon-border: 0 0 0 1px rgba(199, 125, 255, 0.45), 0 0 12px rgba(157, 78, 221, 0.28);
+  --neon-strong: 0 0 0 1px rgba(224, 170, 255, 0.7), 0 0 18px rgba(199, 125, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  --depth-shadow: 0 10px 24px rgba(0, 0, 0, 0.65), 0 4px 0 #0a0512;
+}
+html,body{height:100%; overflow:hidden; overscroll-behavior:none;}
+body{
+  font-family:'Segoe UI',Roboto,-apple-system,sans-serif;
+  color:var(--text); height:100vh; height:100dvh;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(157, 78, 221, 0.22), transparent 42%),
+    radial-gradient(circle at 88% 22%, rgba(56, 189, 248, 0.12), transparent 38%),
+    radial-gradient(circle at 50% 85%, rgba(199, 125, 255, 0.14), transparent 45%),
+    var(--bg);
+  display:flex; flex-direction:column;
+}
+/* СНЕГ */
+.snowflake { position: fixed; top: -10px; color: #fff; opacity: 0.8; font-size: 1.2em; animation: fall linear infinite; z-index: -1; pointer-events: none; }
+@keyframes fall { 0% { transform: translateY(0) rotate(0deg); } 100% { transform: translateY(100vh) rotate(360deg); } }
+
+.page-screen {
+  display: none; flex-direction: column; height: 100%; min-height: 0;
+  overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-bottom: calc(92px + env(safe-area-inset-bottom));
+}
+.page-screen.active { display: flex; }
+header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 16px; background:transparent; flex-shrink: 0;
+}
+.logo-container { display:flex; align-items:center; gap:11px; }
+.logo-icon {
+  width:40px; height:40px;
+  background: linear-gradient(145deg, var(--accent-bright), var(--accent-dk));
+  border-radius:12px; display:flex; align-items:center; justify-content:center;
+  color:#090510; font-weight:900; font-size:18px;
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow: 0 5px 0 #3c096c, 0 0 16px rgba(199, 125, 255, 0.55);
+}
+.logo-title { font-size:19px; font-weight:900; letter-spacing:0.5px; color:#fff; text-shadow: 0 0 12px rgba(199, 125, 255, 0.45); }
+.logo-title span { color: var(--accent-bright); text-shadow: 0 0 14px var(--accent); }
+.balance-pill {
+  display:flex; align-items:center; gap:6px;
+  background: linear-gradient(160deg, var(--card-3), var(--card-2));
+  padding:7px 13px; border-radius:20px; font-weight:800; font-size:13px;
+  border:1px solid var(--border-soft); cursor:pointer;
+  box-shadow: 0 4px 0 #0c0616, var(--neon-border);
+}
+.btn-main {
+  width:100%; padding:15px; border:1px solid rgba(255,255,255,0.35);
+  border-radius:16px; background:linear-gradient(145deg, var(--accent-bright), var(--accent));
+  color:#090510; font-weight:900; font-size:14.5px; cursor:pointer;
+  text-transform:uppercase; letter-spacing:1px;
+  box-shadow: 0 5px 0 #4a148c, 0 0 18px rgba(199,125,255,0.45);
+}
+.btn-grey { background:linear-gradient(155deg, var(--card-3), var(--card-2)); color:#fff; border:1px solid rgba(199,125,255,0.42); font-size:13px; padding:12px; border-radius:13px; font-weight:700; cursor:pointer; box-shadow: 0 4px 0 #0b0514; }
+input[type="text"], input[type="number"], input[type="password"], select { width:100%; padding:13px 14px; background:rgba(11, 6, 20, 0.85); border:1px solid rgba(199,125,255,0.42); border-radius:13px; color:#fff; font-size:15px; margin-bottom:12px; outline:none; box-shadow: inset 0 2px 6px rgba(0,0,0,0.6); }
+.bottom-nav { position: fixed; left: 10px; right: 10px; bottom: 8px; z-index: 120; display: flex; justify-content: space-around; padding: 9px 8px calc(9px + env(safe-area-inset-bottom)); background: rgba(20, 11, 34, 0.92); backdrop-filter: blur(20px); border: 1px solid rgba(199, 125, 255, 0.55); border-radius: 22px; box-shadow: 0 10px 28px rgba(0,0,0,0.85); }
+.nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 7px 12px; border-radius: 15px; cursor: pointer; border: 1px solid transparent; background: transparent; color: var(--dim); font-size: 10px; font-weight: 700; font-family: inherit; transition: all 0.15s ease; }
+.nav-item .ni { font-size: 20px; }
+.nav-item.active { color: var(--accent-bright); background: rgba(199, 125, 255, 0.14); border-color: rgba(199, 125, 255, 0.5); }
+.modal{ display:none; position:fixed; inset:0; background:rgba(5,2,10,0.86); backdrop-filter:blur(7px); align-items:center; justify-content:center; z-index:300; padding:14px; }
+.modal.show{display:flex;}
+.modal .box { background:linear-gradient(160deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.6); border-radius:24px; padding:22px 18px; width:100%; max-width:400px; max-height:90vh; overflow-y:auto; box-shadow: var(--depth-shadow); }
+#toastContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display:flex; flex-direction:column; gap:10px; pointer-events:none; width: 90%; max-width: 400px; }
+.toast { background: linear-gradient(145deg, #ffffff, #f3e8ff); color: #090510; padding: 12px 20px; border-radius: 14px; font-weight: 800; font-size: 13px; text-align: center; border: 1px solid var(--accent-bright); box-shadow: 0 6px 20px rgba(0,0,0,0.5); animation: fadeInOut 3s forwards; }
+@keyframes fadeInOut { 0% { opacity: 0; transform: translateY(-10px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; } 100% { opacity: 0; } }
+</style>
+</head>
+<body>
+<div id="toastContainer"></div><!-- ЭКРАН АВТОРИЗАЦИИ -->
+<div id="authScreen" class="page-screen active" style="justify-content:center; align-items:center; padding:20px;">
+  <div style="text-align:center; margin-bottom:22px;">
+    <div class="logo-icon" style="margin:0 auto 12px; width:64px; height:64px; font-size:30px;">TG</div>
+    <h1 style="font-size:30px; font-weight:900; text-transform:uppercase; text-shadow:0 4px 0 #2d0a4e, 0 0 18px rgba(199,125,255,0.45);">Tagen<span style="color:var(--accent-bright)">Game</span></h1>
+  </div>
+  <div style="width:100%; max-width:360px; background:linear-gradient(160deg, var(--card-2), var(--card)); padding:24px 20px; border-radius:24px; border:1px solid rgba(199,125,255,0.55); box-shadow:var(--depth-shadow);">
+    <h2 id="authTitle" style="text-align:center; margin-bottom:18px; font-size:18px; text-transform:uppercase; color:var(--accent-bright);">Вход</h2>
+    <input type="text" id="authLogin" placeholder="Логин">
+    <input type="password" id="authPassword" placeholder="Пароль">
+    <button class="btn-main" id="mainAuthBtn" style="margin-top:8px;">Войти</button>
+    <button class="btn-grey" id="switchAuthMode" style="width:100%; margin-top:11px; font-size:13px;">Нет аккаунта? Регистрация</button>
+  </div>
+</div>
+
+<!-- ГЛАВНАЯ -->
+<div id="screen-games" class="page-screen">
+  <header>
+    <div class="logo-container">
+      <div class="logo-icon">TG</div>
+      <div class="logo-text">
+        <div class="logo-title">Tagen<span>Game</span></div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="balance-pill" onclick="openProfile()"><span style="color:var(--accent-bright);">★</span> <span id="uiBalanceTop">0</span></div>
+    </div>
+  </header>
+
+  <div style="padding: 0 16px;">
+    <div style="position:relative; padding: 14px 0 12px;">
+      <div style="color:var(--accent-bright); font-size:11px; font-weight:800; letter-spacing:2px; text-transform:uppercase; margin-bottom:7px; display:inline-flex; align-items:center; gap:7px; padding: 5px 10px; border-radius: 999px; background: rgba(199, 125, 255, 0.12); border: 1px solid rgba(199, 125, 255, 0.4);">
+        <div style="width:7px; height:7px; background:var(--cyan); border-radius:50%; box-shadow:0 0 8px var(--cyan);"></div> Live Table
+      </div>
+      <div style="font-size:40px; font-weight:900; line-height:0.94; letter-spacing:-1.5px; text-transform:uppercase; margin-bottom:10px; color:#fff; text-shadow: 0 4px 0 #2d0a4e, 0 10px 24px rgba(0,0,0,0.85);">
+        Лови куш<br><span style="color:var(--accent-bright); display:block; font-size:44px; text-shadow: 0 4px 0 #3c096c, 0 12px 26px rgba(0,0,0,0.9);">На максимуме</span>
+      </div>
+    </div>
+
+    <div class="live-table-card" style="background: linear-gradient(155deg, #2b1846 0%, #190e2b 58%, #120920 100%); border-radius:24px; padding:16px; border:1.5px solid rgba(224, 170, 255, 0.65); margin-bottom:20px; box-shadow: var(--depth-shadow);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="background:rgba(199,125,255,0.22); color:#fff; font-size:10.5px; font-weight:900; padding:5px 11px; border-radius:8px; border:1px solid rgba(224,170,255,0.75); text-transform:uppercase;">ДРОП ЛАЙВ</div>
+        <div style="font-size:11px; font-weight:800; color:#7dd3fc; background:rgba(56,189,248,0.14); border:1px solid rgba(56,189,248,0.45); padding:4px 9px; border-radius:999px;">● Лента активна</div>
+      </div>
+      <div id="liveFeedBar" style="background:#0d0618; border:1.5px solid rgba(224,170,255,0.55); border-radius:16px; padding:10px 12px; display:flex; gap:8px; overflow-x:auto; white-space:nowrap; min-height:48px;">
+        <!-- Сюда падают дропы -->
+      </div>
+    </div>
+
+    <div style="font-size:14px; font-weight:900; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:14px; color:var(--accent-bright); display:flex; align-items:center; gap:9px;">
+      <div style="width:5px; height:17px; background: linear-gradient(180deg, var(--accent-bright), var(--accent-dk)); border-radius:3px;"></div> Арсенал
+    </div>
+    
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; padding-bottom:20px;">
+      <div class="game-card" onclick="openGame('mines')" style="background: linear-gradient(160deg, #231438 0%, #150c23 100%); border:1px solid rgba(199, 125, 255, 0.45); border-radius:24px; padding:18px 16px; position:relative; cursor:pointer; box-shadow: var(--depth-shadow);">
+        <div style="display:inline-block; background:rgba(199,125,255,0.16); color:var(--accent-bright); font-size:9.5px; font-weight:800; padding:4px 9px; border-radius:7px; margin-bottom:20px;">Минное поле</div>
+        <div style="font-size:21px; font-weight:900; text-transform:uppercase; margin-bottom:6px;">Мины</div>
+        <div style="font-size:11.5px; color:var(--dim); font-weight:600;">Открывай и забирай</div>
+      </div>
+      <div class="game-card" onclick="openGame('cases')" style="background: linear-gradient(160deg, #231438 0%, #150c23 100%); border:1px solid rgba(199, 125, 255, 0.45); border-radius:24px; padding:18px 16px; position:relative; cursor:pointer; box-shadow: var(--depth-shadow);">
+        <div style="display:inline-block; background:rgba(199,125,255,0.16); color:var(--accent-bright); font-size:9.5px; font-weight:800; padding:4px 9px; border-radius:7px; margin-bottom:20px;">6 кейсов</div>
+        <div style="font-size:21px; font-weight:900; text-transform:uppercase; margin-bottom:6px;">Кейсы</div>
+        <div style="font-size:11.5px; color:var(--dim); font-weight:600;">Крути и забирай</div>
+      </div>
+      <div class="game-card" onclick="openGame('rocket')" style="background: linear-gradient(160deg, #231438 0%, #150c23 100%); border:1px solid rgba(199, 125, 255, 0.45); border-radius:24px; padding:18px 16px; position:relative; cursor:pointer; box-shadow: var(--depth-shadow);">
+        <div style="display:inline-block; background:rgba(199,125,255,0.16); color:var(--accent-bright); font-size:9.5px; font-weight:800; padding:4px 9px; border-radius:7px; margin-bottom:20px;">Кэш до 5.00x</div>
+        <div style="font-size:21px; font-weight:900; text-transform:uppercase; margin-bottom:6px;">Ракетка</div>
+        <div style="font-size:11.5px; color:var(--dim); font-weight:600;">Взлёт вверх</div>
+      </div>
+      <div class="game-card" onclick="openGame('upgrade')" style="background: linear-gradient(160deg, #231438 0%, #150c23 100%); border:1px solid rgba(199, 125, 255, 0.45); border-radius:24px; padding:18px 16px; position:relative; cursor:pointer; box-shadow: var(--depth-shadow);">
+        <div style="display:inline-block; background:rgba(199,125,255,0.16); color:var(--accent-bright); font-size:9.5px; font-weight:800; padding:4px 9px; border-radius:7px; margin-bottom:20px;">NFT + Предметы</div>
+        <div style="font-size:21px; font-weight:900; text-transform:uppercase; margin-bottom:6px;">Апгрейд</div>
+        <div style="font-size:11.5px; color:var(--dim); font-weight:600;">Повышай ставки</div>
+      </div>
+      <div class="game-card" onclick="openBonusWheel()" style="background: linear-gradient(160deg, #380f0f 0%, #1a0808 100%); border:1px solid rgba(239, 68, 68, 0.6); border-radius:24px; padding:18px 16px; position:relative; cursor:pointer; box-shadow: var(--depth-shadow); grid-column: span 2;">
+        <div style="display:inline-block; background:rgba(239,68,68,0.16); color:#fca5a5; font-size:9.5px; font-weight:800; padding:4px 9px; border-radius:7px; margin-bottom:20px;">Бесплатный бонус</div>
+        <div style="font-size:21px; font-weight:900; text-transform:uppercase; margin-bottom:6px; color:#fca5a5;">Колесо Фортуны</div>
+        <div style="font-size:11.5px; color:#fca5a5; font-weight:600;">Крути раз в 24 часа</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- МИНЫ -->
+<div id="screen-mines" class="page-screen">
+  <div class="game-header" style="display:flex; align-items:center; gap:14px; margin-bottom:18px; padding: 15px 16px 0;">
+    <div class="back-btn" onclick="switchTab('games')" style="width:42px; height:42px; background:linear-gradient(155deg, var(--card-3), var(--card-2)); border-radius:13px; border:1px solid rgba(199,125,255,0.5); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; color:#fff;">←</div>
+    <div style="font-size:21px; font-weight:900; text-transform:uppercase;">Мины</div>
+  </div>
+  <div style="padding: 0 16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background:linear-gradient(155deg, var(--card-2), var(--card)); padding:13px; border-radius:18px; border:1px solid rgba(199,125,255,0.45);">
+      <div style="text-align:center;"><div style="font-size:10px; color:var(--dim); font-weight:700;">МИН</div><div id="minesCountLbl" style="font-size:16px; font-weight:900; color:var(--accent-bright);">3</div></div>
+      <div style="text-align:center;"><div style="font-size:10px; color:var(--dim); font-weight:700;">ПОЛЕ</div><div style="font-size:16px; font-weight:900; color:var(--accent-bright);">3x3</div></div>
+      <div style="text-align:center;"><div style="font-size:10px; color:var(--dim); font-weight:700;">ОТКРЫТО</div><div id="minesOpenedLbl" style="font-size:16px; font-weight:900; color:var(--accent-bright);">0</div></div>
+      <div style="text-align:center;"><div style="font-size:10px; color:var(--dim); font-weight:700;">МНОЖИТЕЛЬ</div><div id="minesMultLbl" style="font-size:16px; font-weight:900; color:var(--accent-bright);">1.00x</div></div>
+    </div>
+    <div id="minesSetup" style="background:linear-gradient(155deg, var(--card-2), var(--card)); padding:16px; border-radius:18px; border:1px solid rgba(199,125,255,0.45); margin-bottom:15px;">
+      <input type="number" id="minesBetInput" placeholder="Ставка (★)" value="100" min="10">
+      <div style="display:flex; gap:6px; margin-bottom:12px;">
+        <button class="btn-grey mine-pill-btn" data-mines="1" onclick="setMines(1)" style="padding:10px; flex:1;">1</button>
+        <button class="btn-grey mine-pill-btn active" data-mines="3" onclick="setMines(3)" style="padding:10px; flex:1;">3</button>
+        <button class="btn-grey mine-pill-btn" data-mines="5" onclick="setMines(5)" style="padding:10px; flex:1;">5</button>
+        <button class="btn-grey mine-pill-btn" data-mines="10" onclick="setMines(10)" style="padding:10px; flex:1;">10</button>
+      </div>
+      <button class="btn-main" id="btnStartMines">Начать игру</button>
+    </div>
+    <div class="mines-grid" id="minesGrid" style="display:none; gap:7px; margin:15px 0; justify-content: center;"></div>
+    <button class="btn-main" id="btnCashout" style="display:none; margin-top: 10px; background:linear-gradient(145deg, #34d399, #059669); color:#04130d;">Забрать <span id="cashoutVal">0</span> ★</button>
+  </div>
+</div>
+
+<!-- РАКЕТКА -->
+<div id="screen-rocket" class="page-screen">
+  <div class="game-header" style="display:flex; align-items:center; gap:14px; margin-bottom:18px; padding: 15px 16px 0;">
+    <div class="back-btn" onclick="switchTab('games')" style="width:42px; height:42px; background:linear-gradient(155deg, var(--card-3), var(--card-2)); border-radius:13px; border:1px solid rgba(199,125,255,0.5); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; color:#fff;">←</div>
+    <div style="font-size:21px; font-weight:900; text-transform:uppercase;">Ракетка</div>
+  </div>
+  <div style="padding: 0 16px;">
+    <div id="rocketStage" style="position: relative; height: 250px; border-radius: 22px; background: radial-gradient(circle at 50% 25%, rgba(199, 125, 255, 0.18), transparent 55%), linear-gradient(180deg, #0d0618 0%, #190d2d 65%, #23123d 100%); border: 1.5px solid rgba(224, 170, 255, 0.52); overflow: hidden; margin-bottom: 14px;">
+      <div style="position: relative; z-index: 4; padding: 14px 16px 0; display: flex; justify-content: space-between;">
+        <div>
+          <div id="rocketStatusText" style="font-size:10px; color:var(--dim); text-transform:uppercase; font-weight:800;">Ожидание</div>
+          <div id="rocketMultDisplay" style="font-size: 38px; font-weight: 900; line-height: 1; color: #ffffff; text-shadow: 0 3px 0 #2d0a4e;">1.00x</div>
+          <div id="rocketWinPreview" style="font-size:12px; font-weight:800; color:var(--accent-bright); margin-top:5px;">Потенциал: 0 ★</div>
+        </div>
+      </div>
+      <div id="rocketTrail" style="position: absolute; left: 50%; bottom: 36px; width: 6px; height: 0; transform: translateX(-50%); background: linear-gradient(180deg, rgba(224,170,255,0.9), transparent);"></div>
+      <div id="rocketShip" style="position: absolute; left: 50%; bottom: 24px; transform: translate(-50%, 0); font-size: 46px; z-index: 3;">🚀</div>
+    </div>
+    <div style="background: linear-gradient(155deg, var(--card-2), var(--card)); padding: 16px; border-radius: 18px; border: 1px solid rgba(199,125,255,0.45);">
+      <input type="number" id="rocketBetInput" placeholder="Ставка (★)" value="100" min="10">
+      <button class="btn-main" id="btnRocketAction">Запустить ракету</button>
+      <div id="rocketHistory" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- КЕЙСЫ -->
+<div id="screen-cases" class="page-screen">
+  <div class="game-header" style="display:flex; align-items:center; gap:14px; margin-bottom:18px; padding: 15px 16px 0;">
+    <div class="back-btn" onclick="switchTab('games')" style="width:42px; height:42px; background:linear-gradient(155deg, var(--card-3), var(--card-2)); border-radius:13px; border:1px solid rgba(199,125,255,0.5); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; color:#fff;">←</div>
+    <div style="font-size:21px; font-weight:900; text-transform:uppercase;">Кейсы</div>
+  </div>
+  <div style="padding: 0 16px;">
+    <div id="casesList">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:13px;">
+        <div class="case-card" onclick="startCase('starter', 100)" style="background:linear-gradient(160deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.45); border-radius:22px; padding:20px 10px; text-align:center; cursor:pointer;">
+          <div style="width:96px; height:96px; margin:0 auto 10px; display:flex; justify-content:center; align-items:center; font-size:50px;">📦</div>
+          <div style="font-size:15px; font-weight:900;">Стартовый</div><div style="color:var(--accent-bright); font-weight:800; margin-top:5px; font-size:13px;">100 ★</div>
+        </div>
+        <div class="case-card" onclick="startCase('pro', 500)" style="background:linear-gradient(160deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.45); border-radius:22px; padding:20px 10px; text-align:center; cursor:pointer;">
+          <div style="width:96px; height:96px; margin:0 auto 10px; display:flex; justify-content:center; align-items:center; font-size:50px;">🎁</div>
+          <div style="font-size:15px; font-weight:900;">Про</div><div style="color:var(--accent-bright); font-weight:800; margin-top:5px; font-size:13px;">500 ★</div>
+        </div>
+        <div class="case-card" onclick="startCase('magic', 1000)" style="background:linear-gradient(160deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.45); border-radius:22px; padding:20px 10px; text-align:center; cursor:pointer;">
+          <div style="width:96px; height:96px; margin:0 auto 10px; display:flex; justify-content:center; align-items:center; font-size:50px;">🔮</div>
+          <div style="font-size:15px; font-weight:900;">Магический</div><div style="color:var(--accent-bright); font-weight:800; margin-top:5px; font-size:13px;">1000 ★</div>
+        </div>
+        <div class="case-card" onclick="startCase('winter', 2500)" style="background:linear-gradient(160deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.45); border-radius:22px; padding:20px 10px; text-align:center; cursor:pointer;">
+          <div style="width:96px; height:96px; margin:0 auto 10px; display:flex; justify-content:center; align-items:center; font-size:50px;">❄️</div>
+          <div style="font-size:15px; font-weight:900;">Зимний</div><div style="color:var(--accent-bright); font-weight:800; margin-top:5px; font-size:13px;">2500 ★</div>
+        </div>
+        <div class="case-card" onclick="startCase('legend', 5000)" style="background:linear-gradient(160deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.45); border-radius:22px; padding:20px 10px; text-align:center; cursor:pointer;">
+          <div style="width:96px; height:96px; margin:0 auto 10px; display:flex; justify-content:center; align-items:center; font-size:50px;">⚡</div>
+          <div style="font-size:15px; font-weight:900;">Легенда</div><div style="color:var(--accent-bright); font-weight:800; margin-top:5px; font-size:13px;">5000 ★</div>
+        </div>
+        <div class="case-card" onclick="startCase('inferno', 10000)" style="background:linear-gradient(160deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.45); border-radius:22px; padding:20px 10px; text-align:center; cursor:pointer;">
+          <div style="width:96px; height:96px; margin:0 auto 10px; display:flex; justify-content:center; align-items:center; font-size:50px;">🔥</div>
+          <div style="font-size:15px; font-weight:900;">Адский</div><div style="color:var(--accent-bright); font-weight:800; margin-top:5px; font-size:13px;">10000 ★</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="caseRoller" style="display:none; margin-top:20px;">
+      <button class="btn-grey" onclick="backToCases()" style="margin-bottom:15px; width:100%;">← Назад к списку</button>
+      <div style="width:100%; height:104px; background:linear-gradient(160deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.6); position:relative; overflow:hidden; display:flex; align-items:center; border-radius:16px;">
+        <div id="rouletteStrip" style="display:flex; position:absolute; left:0;"></div>
+        <div style="position:absolute; left:50%; top:0; bottom:0; width:4px; background:var(--accent-bright); transform:translateX(-50%); z-index:10;"></div>
+      </div>
+      <div id="caseActions" style="display:none; gap:10px; margin-top:15px;">
+          <button class="btn-main" id="btnCaseSell" style="flex:1;">Продать</button>
+          <button class="btn-main" id="btnCaseAgain" style="flex:1; background:linear-gradient(145deg, var(--card-3), var(--card-2)); color:#fff;">Ещё раз</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ОСТАЛЬНЫЕ ЭКРАНЫ (Апгрейд, Инвентарь, Кошелек, Настройки, Админка) БУДУТ В ЧАСТИ 3 --><!-- АПГРЕЙД (НОВОЕ КОЛЕСО) -->
+<div id="screen-upgrade" class="page-screen">
+  <div class="game-header" style="display:flex; align-items:center; gap:14px; margin-bottom:18px; padding: 15px 16px 0;">
+    <div class="back-btn" onclick="switchTab('games')" style="width:42px; height:42px; background:linear-gradient(155deg, var(--card-3), var(--card-2)); border-radius:13px; border:1px solid rgba(199,125,255,0.5); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; color:#fff;">←</div>
+    <div style="font-size:21px; font-weight:900; text-transform:uppercase;">Апгрейд</div>
+  </div>
+  <div style="padding: 0 16px; display:flex; flex-direction:column; align-items:center;">
+    
+    <!-- Круглое колесо -->
+    <div style="position: relative; width: 240px; height: 240px; margin: 10px 0 20px;">
+      <div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(from 180deg, #ef4444 0%, #f59e0b 25%, #10b981 50%, #10b981 50%, #2a2a4a 50%, #2a2a4a 100%); box-shadow: inset 0 0 20px rgba(0,0,0,0.8);"></div>
+      <div style="position: absolute; top: 15px; left: 15px; right: 15px; bottom: 15px; background: #16162a; border-radius: 50%; box-shadow: 0 0 15px rgba(0,0,0,0.5);"></div>
+      <div id="upgNeedle" style="position: absolute; width: 4px; height: 120px; background: #ffd700; bottom: 50%; left: calc(50% - 2px); transform-origin: bottom center; transform: rotate(-90deg); z-index: 5; transition: transform 2s cubic-bezier(0.1, 0.7, 0.1, 1); box-shadow: 0 0 10px #ffd700;"></div>
+      <div style="position: absolute; z-index: 10; text-align: center; background: #16162a; width: 100px; height: 100px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid #2a2a4a; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <div style="font-size:12px; color:#aaa; margin-bottom:5px;">Шанс</div>
+        <div id="upgradeChanceText" style="font-size:22px; font-weight:bold; color:#fff;">0%</div>
+      </div>
+    </div>
+
+    <div class="upgrade-slots" style="display: flex; justify-content: space-between; width: 100%; gap: 10px; margin-bottom: 15px;">
+      <div id="upgradeMySlot" class="slot-card" onclick="openMyUpgradeSelect()" style="flex: 1; background: #12121a; border: 2px dashed #444; border-radius: 16px; height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
+        <div style="font-size:10px; color:var(--dim); margin-bottom:5px;">Ставка (★ / NFT)</div>
+        <div id="upgMyContent" style="font-size:13px; font-weight:800;">Выбрать</div>
+      </div>
+      <div style="display:flex; align-items:center; font-size:20px; color:var(--accent-bright);">➔</div>
+      <div id="upgradeTargetSlot" class="slot-card" onclick="openTargetUpgradeSelect()" style="flex: 1; background: #12121a; border: 2px dashed #444; border-radius: 16px; height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
+        <div style="font-size:10px; color:var(--dim); margin-bottom:5px;">Получить</div>
+        <div id="upgTargetContent" style="font-size:13px; font-weight:800;">Выбрать</div>
+      </div>
+    </div>
+
+    <button class="btn-main" id="btnDoUpgrade">Улучшить</button>
+  </div>
+</div>
+
+<!-- ИНВЕНТАРЬ -->
+<div id="screen-inventory" class="page-screen">
+  <div class="game-header" style="display:flex; align-items:center; gap:14px; margin-bottom:18px; padding: 15px 16px 0;">
+    <div style="font-size:21px; font-weight:900; text-transform:uppercase;">Инвентарь</div>
+  </div>
+  <div class="inventory" id="inventory" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(98px,1fr)); gap:11px; padding:0 16px;"></div>
+</div>
+
+<!-- КОШЕЛЕК -->
+<div id="screen-wallet" class="page-screen">
+  <div class="game-header" style="display:flex; align-items:center; gap:14px; margin-bottom:18px; padding: 15px 16px 0;">
+    <div style="font-size:21px; font-weight:900; text-transform:uppercase;">Кошелек</div>
+  </div>
+  <div style="padding: 0 16px;">
+      <div style="background:linear-gradient(155deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.48); border-radius:20px; padding:18px; margin-bottom:15px;">
+        <h3 style="font-size:13.5px; font-weight:800; margin-bottom:12px; color:var(--accent-bright); text-transform:uppercase;">Пополнение</h3>
+        <input type="number" id="depositAmount" placeholder="Введите сумму (★)">
+        <button class="btn-main" id="btnWalletDeposit">Пополнить</button>
+      </div>
+      <div style="background:linear-gradient(155deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.48); border-radius:20px; padding:18px; margin-bottom:15px;">
+        <h3 style="font-size:13.5px; font-weight:800; margin-bottom:12px; color:var(--accent-bright); text-transform:uppercase;">Вывод средств</h3>
+        <input type="number" id="withdrawAmount" placeholder="Введите сумму (★)">
+        <button class="btn-main" id="btnWalletWithdraw" style="background:linear-gradient(145deg, var(--card-3), var(--card-2)); color:#fff;">Вывести</button>
+      </div>
+  </div>
+</div>
+
+<!-- НАСТРОЙКИ -->
+<div id="screen-settings" class="page-screen">
+  <div class="game-header" style="display:flex; align-items:center; gap:14px; margin-bottom:18px; padding: 15px 16px 0;">
+    <div style="font-size:21px; font-weight:900; text-transform:uppercase;">Настройки</div>
+  </div>
+  <div style="padding: 0 16px;">
+    <div style="background:linear-gradient(155deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.48); border-radius:20px; padding:18px; margin-bottom:15px;">
+      <h3 style="font-size:13.5px; font-weight:800; margin-bottom:12px; color:var(--accent-bright); text-transform:uppercase;">Звук</h3>
+      <div style="margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700;"><span>Музыка</span><span id="bgmVolLabel" style="color:var(--accent-bright);">30%</span></div>
+        <input type="range" id="bgmVolumeSlider" class="vol-slider" min="0" max="100" value="30" style="width:100%;">
+      </div>
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700;"><span>Эффекты</span><span id="sfxVolLabel" style="color:var(--accent-bright);">100%</span></div>
+        <input type="range" id="sfxVolumeSlider" class="vol-slider" min="0" max="100" value="100" style="width:100%;">
+      </div>
+    </div>
+    <button class="btn-main" id="adminFromSettings" style="display:none; background:linear-gradient(145deg, #ffe066, var(--gold)); color:#090510; margin-bottom:11px;">🛡 Админ-панель</button>
+    <button class="btn-main" id="logoutBtn" style="background:linear-gradient(145deg, #f87171, var(--bad)); color:#fff; box-shadow:0 5px 0 #7f1d1d;">Выйти</button>
+  </div>
+</div>
+
+<!-- АДМИНКА -->
+<div id="screen-admin" class="page-screen">
+  <div class="game-header" style="display:flex; align-items:center; gap:14px; margin-bottom:18px; padding: 15px 16px 0;">
+    <div class="back-btn" onclick="switchTab('settings')" style="width:42px; height:42px; background:linear-gradient(155deg, var(--card-3), var(--card-2)); border-radius:13px; border:1px solid rgba(199,125,255,0.5); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; color:#fff;">←</div>
+    <div style="font-size:21px; font-weight:900; text-transform:uppercase;">Админка</div>
+  </div>
+  <div style="padding: 0 16px;" id="adminContent"></div>
+</div>
+
+<!-- НАВИГАЦИЯ -->
+<nav class="bottom-nav" id="bottomNav" style="display:none;">
+  <button class="nav-item active" data-tab="games" onclick="switchTab('games')"><span class="ni">🏠</span>Главная</button>
+  <button class="nav-item" data-tab="inventory" onclick="switchTab('inventory')"><span class="ni">🎒</span>Инвентарь</button>
+  <button class="nav-item" data-tab="wallet" onclick="switchTab('wallet')"><span class="ni">💼</span>Баланс</button>
+  <button class="nav-item" data-tab="settings" onclick="switchTab('settings')"><span class="ni">⚙️</span>Настройки</button>
+</nav>
+
+<!-- МОДАЛКА ПРОФИЛЯ -->
+<div class="modal" id="profileModal">
+  <div class="box" style="text-align:left;">
+    <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
+      <div style="width:70px; height:70px; background:var(--card-3); border:1px solid var(--accent); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:900; color:var(--accent-bright);">T</div>
+      <div>
+        <h2 id="profileName" style="font-size:20px; font-weight:900;">Игрок</h2>
+        <div style="color:var(--dim); font-size:12px;">@user</div>
+      </div>
+      <div style="margin-left:auto; text-align:right;">
+        <div style="font-size:18px; font-weight:900; color:var(--accent-bright);" id="profileBalance">0 ★</div>
+      </div>
+    </div>
+    <button class="btn-grey" onclick="closeModal('profileModal')" style="margin-top:20px; width:100%;">Закрыть</button>
+  </div>
+</div>
+
+<!-- МОДАЛКА ВЫБОРА ПРЕДМЕТА / NFT -->
+<div class="modal" id="selectItemModal">
+  <div class="box">
+    <h3 style="margin-bottom:15px; text-align:center; text-transform:uppercase;" id="selectItemTitle">Выберите предмет</h3>
+    <div id="mySelectOptions" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
+        <button class="btn-main" onclick="selectMyBet('stars')" style="padding:12px; font-size:14px;">★ Поставить Звёзды</button>
+        <button class="btn-main" onclick="selectMyBet('items')" style="padding:12px; font-size:14px; background:linear-gradient(145deg, var(--card-3), var(--card-2)); color:#fff;">🎁 Предмет из инвентаря</button>
+        <button class="btn-main" onclick="selectMyBet('nft')" style="padding:12px; font-size:14px; background:linear-gradient(145deg, #0284c7, #1e3a8a); color:#fff;">💎 Выбрать NFT</button>
+    </div>
+    <div id="myItemsList" style="display:none; grid-template-columns:repeat(auto-fill,minmax(82px,1fr)); gap:10px; max-height:50vh; overflow-y:auto; padding:5px;"></div>
+    <div id="targetItemsList" style="display:none; grid-template-columns:repeat(auto-fill,minmax(82px,1fr)); gap:10px; max-height:50vh; overflow-y:auto; padding:5px;"></div>
+    <button class="btn-grey" onclick="closeModal('selectItemModal')" style="margin-top:15px; padding:12px; width:100%;">Отмена</button>
+  </div>
+</div>
+
+<!-- МОДАЛКА КОЛЕСА БОНУСОВ -->
+<div class="modal" id="bonusModal">
+  <div class="box" style="text-align:center;">
+    <h2 style="margin-bottom:10px; color:var(--accent-bright);">Колесо Фортуны</h2>
+    <p style="font-size:12px; color:var(--dim); margin-bottom:15px;">Крути раз в 24 часа и получай звёзды!</p>
+    <div id="bonusWheelResult" style="font-size:30px; font-weight:900; margin-bottom:20px; min-height:40px;"></div>
+    <button class="btn-main" id="btnSpinWheel" style="background:linear-gradient(145deg, #ef4444, #991b1b); color:#fff;">Крутить</button>
+    <button class="btn-grey" onclick="closeModal('bonusModal')" style="margin-top:10px; width:100%;">Закрыть</button>
+  </div>
+</div>
+
+<script>
+// ВЕСЬ JAVASCRIPT ИЗ ТВОЕГО СТАРОГО КОДА (с добавлением новых функций)
+// ... (Вставь сюда весь JS-код из своего предыдущего index.html, который начинается с let currentUser = null;) ...
+// Ниже только новые функции, которые нужно добавить в конец скрипта перед закрывающим </script>
+
+// --- СНЕГОПАД ---
+function createSnow() {
+  const snowContainer = document.body;
+  for (let i = 0; i < 50; i++) {
+    let snowflake = document.createElement('div');
+    snowflake.className = 'snowflake';
+    snowflake.innerHTML = '❄';
+    snowflake.style.left = Math.random() * 100 + 'vw';
+    snowflake.style.animationDuration = Math.random() * 3 + 2 + 's';
+    snowflake.style.opacity = Math.random();
+    snowflake.style.fontSize = Math.random() * 10 + 10 + 'px';
+    snowContainer.appendChild(snowflake);
+    setTimeout(() => { snowflake.remove(); }, 5000);
+  }
+}
+setInterval(createSnow, 300);
+
+// --- КОЛЕСО ФОРТУНЫ ---
+function openBonusWheel() {
+  document.getElementById('bonusModal').classList.add('show');
+  document.getElementById('bonusWheelResult').textContent = '';
+  document.getElementById('btnSpinWheel').disabled = false;
+}
+
+document.getElementById('btnSpinWheel').onclick = async () => {
+  const btn = document.getElementById('btnSpinWheel');
+  btn.disabled = true;
+  btn.textContent = 'Крутим...';
+  const res = await apiPost('/api/bonus/spin', {});
+  const data = await res.json();
+  
+  if (res.ok) {
+    document.getElementById('bonusWheelResult').innerHTML = `<span style="color:var(--ok);">+${data.win} ★</span>`;
+    document.getElementById('uiBalanceTop').textContent = data.balance;
+    toast('Бонус получен!', 'success');
+  } else {
+    document.getElementById('bonusWheelResult').innerHTML = `<span style="color:var(--bad); font-size:14px;">${data.error}</span>`;
+  }
+  btn.textContent = 'Крутить';
+  btn.disabled = false;
+};
+
+// --- ЗАПУСК ВСЕГО ---
+// Не забудь, что в самом низу твоего скрипта уже есть вызов checkLogin(); и т.д.
+</script>
+</body>
+</html>
