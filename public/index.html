@@ -3,475 +3,1203 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>TagenGame</title>
+<title>TagenGram ❄️</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#090510;
-  --card:#160d24;
-  --card-2:#201334;
-  --card-3:#2c1947;
-  --border:#45276e;
-  --border-soft:#58338c;
-  --text:#ffffff;
-  --dim:#b8a8d1;
-  --accent:#c77dff;
-  --accent-bright:#e0aaff;
-  --accent-dk:#7b2cbf;
-  --cyan:#38bdf8;
-  --gold:#ffd700;
-  --ok:#10b981;
-  --bad:#ef4444;
-  --neon-border: 0 0 0 1px rgba(199, 125, 255, 0.45), 0 0 12px rgba(157, 78, 221, 0.28);
-  --neon-strong: 0 0 0 1px rgba(224, 170, 255, 0.7), 0 0 18px rgba(199, 125, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.16);
-  --depth-shadow: 0 10px 24px rgba(0, 0, 0, 0.65), 0 4px 0 #0a0512;
+  --bg:#090510; --card:#160d24; --card-2:#201334; --card-3:#2c1947;
+  --border:#45276e; --text:#fff; --dim:#b8a8d1;
+  --accent:#c77dff; --accent-bright:#e0aaff; --accent-dk:#7b2cbf;
+  --gold:#ffd700; --gold-bright:#ffe066; --gold-dk:#b8860b;
+  --ok:#10b981; --bad:#ef4444;
+  --neon-border: 0 0 0 1px rgba(199,125,255,0.45), 0 0 12px rgba(157,78,221,0.28);
+  --neon-strong: 0 0 0 1px rgba(224,170,255,0.7), 0 0 18px rgba(199,125,255,0.45), inset 0 1px 0 rgba(255,255,255,0.16);
+  --gold-border: 0 0 0 1px rgba(255,215,0,0.55), 0 0 14px rgba(255,215,0,0.35);
+  --depth-shadow: 0 10px 24px rgba(0,0,0,0.65), 0 4px 0 #0a0512;
 }
-html,body{height:100%; overflow:hidden; overscroll-behavior:none;}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 body{
-  font-family:'Segoe UI',Roboto,-apple-system,sans-serif;
-  color:var(--text); height:100vh; height:100dvh;
+  font-family:'Segoe UI',Roboto,-apple-system,sans-serif;color:var(--text);
+  height:100vh;height:100dvh;
   background:
-    radial-gradient(circle at 15% 10%, rgba(157, 78, 221, 0.22), transparent 42%),
-    radial-gradient(circle at 88% 22%, rgba(56, 189, 248, 0.12), transparent 38%),
-    radial-gradient(circle at 50% 85%, rgba(199, 125, 255, 0.14), transparent 45%),
+    radial-gradient(circle at 15% 10%,rgba(157,78,221,.24),transparent 42%),
+    radial-gradient(circle at 88% 22%,rgba(56,189,248,.14),transparent 38%),
+    radial-gradient(circle at 50% 85%,rgba(199,125,255,.16),transparent 45%),
     var(--bg);
-  display:flex; flex-direction:column;
+  display:flex;flex-direction:column;
 }
-/* СНЕГ */
-.snowflake { position: fixed; top: -10px; color: #fff; opacity: 0.8; font-size: 1.2em; animation: fall linear infinite; z-index: -1; pointer-events: none; }
-@keyframes fall { 0% { transform: translateY(0) rotate(0deg); } 100% { transform: translateY(100vh) rotate(360deg); } }
+#snowCanvas{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.78}
 
-.page-screen {
-  display: none; flex-direction: column; height: 100%; min-height: 0;
-  overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  padding-bottom: calc(92px + env(safe-area-inset-bottom));
+.topbar{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:10px 13px;
+  background:rgba(15,8,26,.94);backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(199,125,255,.35);
+  box-shadow:0 6px 20px rgba(0,0,0,.6);
+  flex-shrink:0;
 }
-.page-screen.active { display: flex; }
-header{
-  display:flex; align-items:center; justify-content:space-between;
-  padding:14px 16px; background:transparent; flex-shrink: 0;
+.brand-wrap{display:flex;align-items:center;gap:7px;cursor:pointer}
+.brand-name{font-size:15.5px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;text-shadow:0 0 12px rgba(199,125,255,.5)}
+.brand-name span{color:var(--accent-bright)}
+.top-right{display:flex;align-items:center;gap:6px}
+.sound-btn{
+  background:linear-gradient(155deg,var(--card-3),var(--card-2));
+  border:1px solid rgba(199,125,255,.5);border-radius:11px;
+  width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  font-size:15px;cursor:pointer;color:#fff;box-shadow:0 3px 0 #0b0514;
 }
-.logo-container { display:flex; align-items:center; gap:11px; }
-.logo-icon {
-  width:40px; height:40px;
-  background: linear-gradient(145deg, var(--accent-bright), var(--accent-dk));
-  border-radius:12px; display:flex; align-items:center; justify-content:center;
-  color:#090510; font-weight:900; font-size:18px;
-  border: 1px solid rgba(255,255,255,0.35);
-  box-shadow: 0 5px 0 #3c096c, 0 0 16px rgba(199, 125, 255, 0.55);
+.sound-btn.muted{opacity:.55;border-color:rgba(239,68,68,.5)}
+.bal-chip{
+  background:linear-gradient(160deg,var(--card-3),var(--card-2));
+  border:1px solid rgba(199,125,255,.5);
+  border-radius:11px;padding:4px 8px;
+  font-size:11px;font-weight:800;line-height:1.12;
+  box-shadow:0 3px 0 #0b0514;cursor:pointer;white-space:nowrap;
 }
-.logo-title { font-size:19px; font-weight:900; letter-spacing:0.5px; color:#fff; text-shadow: 0 0 12px rgba(199, 125, 255, 0.45); }
-.logo-title span { color: var(--accent-bright); text-shadow: 0 0 14px var(--accent); }
-.balance-pill {
-  display:flex; align-items:center; gap:6px;
-  background: linear-gradient(160deg, var(--card-3), var(--card-2));
-  padding:7px 13px; border-radius:20px; font-weight:800; font-size:13px;
-  border:1px solid var(--border-soft); cursor:pointer;
-  box-shadow: 0 4px 0 #0c0616, var(--neon-border);
+.bal-chip.stars{border-color:rgba(255,215,0,.55)}
+.bal-chip small{display:block;font-size:8.5px;color:var(--gold-bright);font-weight:900}
+
+.page-screen{display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(92px + env(safe-area-inset-bottom));position:relative;z-index:2}
+.page-screen.active{display:flex}
+.pad{padding:14px}
+
+.chat-row{
+  display:flex;align-items:center;gap:12px;
+  background:linear-gradient(155deg,var(--card-2),var(--card));
+  border:1px solid rgba(199,125,255,.38);
+  border-radius:18px;padding:11px 12px;margin-bottom:9px;
+  box-shadow:var(--depth-shadow);cursor:pointer;transition:transform .12s;
 }
-.btn-main {
-  width:100%; padding:15px; border:1px solid rgba(255,255,255,0.35);
-  border-radius:16px; background:linear-gradient(145deg, var(--accent-bright), var(--accent));
-  color:#090510; font-weight:900; font-size:14.5px; cursor:pointer;
-  text-transform:uppercase; letter-spacing:1px;
-  box-shadow: 0 5px 0 #4a148c, 0 0 18px rgba(199,125,255,0.45);
+.chat-row:active{transform:translateY(2px)}
+.avatar-circle{
+  position:relative;width:52px;height:52px;border-radius:17px;flex-shrink:0;
+  background:linear-gradient(145deg,var(--accent-bright),var(--accent-dk));
+  color:#090510;font-size:21px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(255,215,0,.55);overflow:hidden;
 }
-.btn-grey { background:linear-gradient(155deg, var(--card-3), var(--card-2)); color:#fff; border:1px solid rgba(199,125,255,0.42); font-size:13px; padding:12px; border-radius:13px; font-weight:700; cursor:pointer; box-shadow: 0 4px 0 #0b0514; }
-input[type="text"], input[type="number"], input[type="password"], select { width:100%; padding:13px 14px; background:rgba(11, 6, 20, 0.85); border:1px solid rgba(199,125,255,0.42); border-radius:13px; color:#fff; font-size:15px; margin-bottom:12px; outline:none; box-shadow: inset 0 2px 6px rgba(0,0,0,0.6); }
-.bottom-nav { position: fixed; left: 10px; right: 10px; bottom: 8px; z-index: 120; display: flex; justify-content: space-around; padding: 9px 8px calc(9px + env(safe-area-inset-bottom)); background: rgba(20, 11, 34, 0.92); backdrop-filter: blur(20px); border: 1px solid rgba(199, 125, 255, 0.55); border-radius: 22px; box-shadow: 0 10px 28px rgba(0,0,0,0.85); }
-.nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 7px 12px; border-radius: 15px; cursor: pointer; border: 1px solid transparent; background: transparent; color: var(--dim); font-size: 10px; font-weight: 700; font-family: inherit; transition: all 0.15s ease; }
-.nav-item .ni { font-size: 20px; }
-.nav-item.active { color: var(--accent-bright); background: rgba(199, 125, 255, 0.14); border-color: rgba(199, 125, 255, 0.5); }
-.modal{ display:none; position:fixed; inset:0; background:rgba(5,2,10,0.86); backdrop-filter:blur(7px); align-items:center; justify-content:center; z-index:300; padding:14px; }
-.modal.show{display:flex;}
-.modal .box { background:linear-gradient(160deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.6); border-radius:24px; padding:22px 18px; width:100%; max-width:400px; max-height:90vh; overflow-y:auto; box-shadow: var(--depth-shadow); }
-#toastContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display:flex; flex-direction:column; gap:10px; pointer-events:none; width: 90%; max-width: 400px; }
-.toast { background: linear-gradient(145deg, #ffffff, #f3e8ff); color: #090510; padding: 12px 20px; border-radius: 14px; font-weight: 800; font-size: 13px; text-align: center; border: 1px solid var(--accent-bright); box-shadow: 0 6px 20px rgba(0,0,0,0.5); animation: fadeInOut 3s forwards; }
-@keyframes fadeInOut { 0% { opacity: 0; transform: translateY(-10px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; } 100% { opacity: 0; } }
+.avatar-circle img{width:100%;height:100%;object-fit:cover}
+.online-dot{
+  position:absolute;bottom:2px;right:2px;width:11px;height:11px;border-radius:50%;
+  background:var(--ok);border:2px solid #160d24;box-shadow:0 0 8px var(--ok);
+}
+.unread-badge{
+  background:linear-gradient(145deg,var(--gold-bright),var(--gold));
+  color:#090510;font-size:11px;font-weight:900;
+  min-width:22px;height:22px;padding:0 6px;border-radius:999px;
+  display:flex;align-items:center;justify-content:center;
+}
+
+#screen-room{padding-bottom:0;overflow:hidden}
+.room-header{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:rgba(22,13,36,.96);border-bottom:1px solid rgba(199,125,255,.4);
+  flex-shrink:0;
+}
+.room-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:9px}
+.msg-wrap{display:flex;flex-direction:column;max-width:82%}
+.msg-wrap.mine{align-self:flex-end;align-items:flex-end}
+.msg-wrap.other{align-self:flex-start;align-items:flex-start}
+.msg-sender{font-size:11px;font-weight:800;color:var(--accent-bright);margin-bottom:3px;cursor:pointer}
+.msg-bubble{
+  background:linear-gradient(155deg,var(--card-3),var(--card-2));
+  border:1px solid rgba(199,125,255,.45);
+  border-radius:18px 18px 18px 6px;padding:10px 13px;
+  font-size:14px;line-height:1.4;word-break:break-word;
+  box-shadow:0 4px 12px rgba(0,0,0,.45);
+}
+.msg-wrap.mine .msg-bubble{
+  background:linear-gradient(145deg,#4c1d95,#2e1065);
+  border-color:rgba(255,215,0,.55);
+  border-radius:18px 18px 6px 18px;
+}
+.msg-time{font-size:9.5px;color:var(--dim);margin-top:4px;text-align:right}
+
+.chat-gift-card{
+  width:218px;border-radius:18px;padding:12px;text-align:center;
+  background:linear-gradient(160deg,#2a1647,#150a26);
+  border:1px solid rgba(255,215,0,.65);
+  box-shadow:0 8px 20px rgba(0,0,0,.6),var(--gold-border);cursor:pointer;
+}
+.chat-gift-badge{display:inline-block;font-size:10px;font-weight:900;background:rgba(255,215,0,.2);color:var(--gold-bright);border:1px solid rgba(255,215,0,.5);padding:2px 8px;border-radius:999px;margin-bottom:8px}
+
+.room-composer{
+  display:flex;align-items:center;gap:7px;
+  padding:9px 10px calc(9px + env(safe-area-inset-bottom));
+  background:rgba(16,9,28,.97);border-top:1px solid rgba(199,125,255,.45);
+  flex-shrink:0;z-index:130;
+}
+.room-composer input[type="text"]{margin-bottom:0;border-radius:999px;padding:10px 14px;font-size:14px}
+.icon-round-btn{
+  width:40px;height:40px;border-radius:50%;flex-shrink:0;border:1px solid rgba(199,125,255,.5);
+  background:linear-gradient(155deg,var(--card-3),var(--card-2));color:#fff;font-size:18px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.icon-round-btn.send{background:linear-gradient(145deg,var(--gold-bright),var(--gold));color:#090510;border-color:#fff;font-weight:900}
+
+.tg-profile-hero{
+  border-radius:24px;overflow:hidden;
+  background:linear-gradient(160deg,var(--card-2),var(--card));
+  border:1px solid rgba(199,125,255,.5);
+  box-shadow:var(--depth-shadow),var(--neon-border);
+  margin-bottom:13px;
+}
+.tg-profile-banner{
+  height:96px;width:100%;position:relative;
+  background:linear-gradient(135deg,#3b1668 0%,#190b2e 55%,#0e294b 100%);
+}
+.tg-profile-body{padding:0 16px 18px;text-align:center;margin-top:-44px;position:relative;z-index:2}
+.tg-profile-avatar{
+  width:88px;height:88px;border-radius:28px;margin:0 auto 10px;
+  background:linear-gradient(145deg,var(--accent-bright),var(--accent-dk));
+  color:#090510;font-size:36px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;
+  border:3px solid #160d24;box-shadow:0 8px 22px rgba(0,0,0,.65),var(--gold-border);
+  overflow:hidden;
+}
+.tg-profile-avatar img{width:100%;height:100%;object-fit:cover}
+.tg-stats-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.tg-stat-box{background:rgba(10,5,20,.65);border:1px solid rgba(199,125,255,.32);border-radius:14px;padding:8px 6px}
+.tg-stat-num{font-size:15px;font-weight:900;color:#fff}
+.tg-stat-lbl{font-size:10px;color:var(--dim);font-weight:700;margin-top:2px}
+
+.tg-tabs-bar{display:flex;gap:8px;margin-bottom:12px}
+.tg-tab-btn{
+  flex:1;padding:10px;border-radius:14px;border:1px solid rgba(199,125,255,.38);
+  background:linear-gradient(155deg,var(--card-2),var(--card));
+  color:var(--dim);font-size:12.5px;font-weight:900;cursor:pointer;
+}
+.tg-tab-btn.active{
+  color:#090510;background:linear-gradient(145deg,var(--gold-bright),var(--gold));
+  border-color:#fff;box-shadow:0 4px 14px rgba(255,215,0,.35);
+}
+
+.gifts-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.gift-card{
+  background:linear-gradient(160deg,#211336,#140b21);
+  border:1px solid rgba(199,125,255,.42);border-radius:19px;padding:10px;
+  display:flex;flex-direction:column;box-shadow:var(--depth-shadow),var(--neon-border);
+  position:relative;cursor:pointer;transition:transform .12s;
+}
+.gift-card:active{transform:scale(.98)}
+.gift-card.pinned-card{border-color:rgba(255,215,0,.72);box-shadow:var(--depth-shadow),var(--gold-border)}
+.pin-badge{
+  position:absolute;top:14px;right:14px;z-index:4;
+  background:rgba(10,5,20,.82);border:1px solid rgba(255,215,0,.65);
+  color:var(--gold-bright);font-size:10px;font-weight:900;
+  padding:2px 7px;border-radius:999px;
+}
+.serial-badge{
+  position:absolute;top:14px;left:14px;z-index:4;
+  background:rgba(10,5,20,.78);border:1px solid rgba(224,170,255,.45);
+  color:var(--accent-bright);font-size:10px;font-weight:900;
+  padding:2px 7px;border-radius:999px;
+}
+.gift-art-box{
+  position:relative;width:100%;aspect-ratio:1/0.92;border-radius:14px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;margin-bottom:9px;
+  border:1px solid rgba(255,255,255,.12);
+}
+.gift-art-pattern{
+  position:absolute;inset:0;opacity:.14;
+  background-image:radial-gradient(#fff 1.5px,transparent 1.5px),radial-gradient(#fff 1.5px,#0000 1.5px);
+  background-size:22px 22px;background-position:0 0,11px 11px;pointer-events:none;
+}
+.gift-art-inner{position:relative;z-index:2;width:76%;height:76%;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
+.gift-art-inner img{width:100%;height:100%;object-fit:contain}
+.gift-name{font-size:14px;font-weight:900;color:#fff;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rarity-pill{font-size:10px;font-weight:900;padding:2px 7px;border-radius:6px;display:inline-block}
+.rarity-pill.Legendary{background:rgba(249,115,22,.22);color:#fdba74;border:1px solid rgba(249,115,22,.5)}
+.rarity-pill.Epic{background:rgba(234,179,8,.22);color:#fde047;border:1px solid rgba(234,179,8,.5)}
+.rarity-pill.Rare{background:rgba(59,130,246,.22);color:#93c5fd;border:1px solid rgba(59,130,246,.5)}
+.gift-price-ton{font-size:14px;font-weight:900;color:#f59e0b;margin-top:6px}
+
+.search-box{position:relative;margin-bottom:11px}
+.search-box input{width:100%;padding:11px 14px 11px 36px;background:rgba(16,9,28,.9);border:1px solid rgba(199,125,255,.45);border-radius:14px;color:#fff;font-size:14px;outline:none;margin-bottom:0}
+.search-box::before{content:'🔍';position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;opacity:.75}
+.filter-pills{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px;scrollbar-width:none}
+.filter-pills::-webkit-scrollbar{display:none}
+.f-pill{flex-shrink:0;padding:7px 13px;border-radius:12px;background:linear-gradient(155deg,var(--card-2),var(--card));border:1px solid rgba(199,125,255,.38);color:var(--dim);font-size:12px;font-weight:800;cursor:pointer}
+.f-pill.active{color:#fff;background:linear-gradient(145deg,#3b1d66,#241142);border-color:var(--accent-bright);box-shadow:var(--neon-strong)}
+
+.btn-main{width:100%;padding:12px;border:1px solid rgba(255,255,255,.35);border-radius:14px;background:linear-gradient(145deg,var(--accent-bright),var(--accent));color:#090510;font-weight:900;font-size:13px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;box-shadow:0 4px 0 #4a148c}
+.btn-gold{background:linear-gradient(145deg,var(--gold-bright),var(--gold))!important;color:#090510!important;box-shadow:0 4px 0 var(--gold-dk)!important}
+.btn-green{background:linear-gradient(145deg,#34d399,#059669)!important;color:#04130d!important;box-shadow:0 4px 0 #064e3b!important}
+.btn-grey{background:linear-gradient(155deg,var(--card-3),var(--card-2));color:#fff;border:1px solid rgba(199,125,255,.42);font-size:12px;padding:9px 12px;border-radius:12px;font-weight:800;cursor:pointer}
+.btn-danger{background:linear-gradient(145deg,#f87171,var(--bad));color:#fff;border:1px solid rgba(255,255,255,.25);padding:10px 12px;border-radius:12px;font-weight:800;cursor:pointer}
+input[type="text"],input[type="number"],input[type="password"],select.styled-select{
+  width:100%;padding:11px 13px;background:rgba(11,6,20,.88);border:1px solid rgba(199,125,255,.45);
+  border-radius:13px;color:#fff;font-size:14px;margin-bottom:10px;outline:none;font-family:inherit;
+}
+.panel-card{background:linear-gradient(155deg,var(--card-2),var(--card));border:1px solid rgba(199,125,255,.45);border-radius:20px;padding:15px;margin-bottom:13px;box-shadow:var(--depth-shadow),var(--neon-border)}
+.panel-card h3{font-size:13px;font-weight:900;color:var(--gold-bright);text-transform:uppercase;letter-spacing:.6px;margin-bottom:11px}
+
+.bottom-nav{
+  position:fixed;left:8px;right:8px;bottom:8px;z-index:120;
+  display:flex;justify-content:space-around;
+  padding:8px 4px calc(8px + env(safe-area-inset-bottom));
+  background:rgba(18,10,32,.95);backdrop-filter:blur(20px);
+  border:1px solid rgba(199,125,255,.55);border-radius:22px;
+  box-shadow:0 10px 28px rgba(0,0,0,.85),var(--neon-strong);
+}
+.nav-item{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  padding:5px 4px;border-radius:14px;cursor:pointer;border:1px solid transparent;
+  background:transparent;color:var(--dim);font-size:10px;font-weight:800;font-family:inherit;flex:1;
+}
+.nav-item .ni{font-size:19px;line-height:1}
+.nav-item.active{color:var(--accent-bright);background:rgba(199,125,255,.15);border-color:rgba(224,170,255,.55)}
+
+.modal{display:none;position:fixed;inset:0;background:rgba(5,2,10,.86);backdrop-filter:blur(7px);align-items:center;justify-content:center;z-index:300;padding:14px}
+.modal.show{display:flex}
+.modal .box{background:linear-gradient(160deg,var(--card-2),var(--card));border:1px solid rgba(255,215,0,.55);border-radius:24px;padding:18px;width:100%;max-width:390px;max-height:90vh;overflow-y:auto;box-shadow:var(--depth-shadow),var(--gold-border)}
+#toastContainer{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;width:90%;max-width:390px}
+.toast{background:linear-gradient(145deg,#fff,#f3e8ff);color:#090510;padding:10px 15px;border-radius:13px;font-weight:800;font-size:13px;text-align:center;border:1px solid var(--gold-bright);box-shadow:0 6px 20px rgba(0,0,0,.55);animation:fadeToast 2.8s forwards}
+@keyframes fadeToast{0%{opacity:0;transform:translateY(-8px)}10%{opacity:1;transform:translateY(0)}88%{opacity:1}100%{opacity:0}}
 </style>
 </head>
 <body>
-<div id="toastContainer"></div><!-- ЭКРАН АВТОРИЗАЦИИ -->
-<div id="authScreen" class="page-screen active" style="justify-content:center; align-items:center; padding:20px;">
-  <div style="text-align:center; margin-bottom:22px;">
-    <div class="logo-icon" style="margin:0 auto 12px; width:64px; height:64px; font-size:30px;">TG</div>
-    <h1 style="font-size:30px; font-weight:900; text-transform:uppercase; text-shadow:0 4px 0 #2d0a4e, 0 0 18px rgba(199,125,255,0.45);">Tagen<span style="color:var(--accent-bright)">Game</span></h1>
+
+<canvas id="snowCanvas"></canvas>
+<div id="toastContainer"></div>
+
+<div id="authScreen" class="page-screen active" style="justify-content:center;align-items:center;padding:20px;z-index:100;">
+  <div style="text-align:center;margin-bottom:20px;">
+    <div style="font-size:48px;margin-bottom:6px;filter:drop-shadow(0 0 16px rgba(199,125,255,.7));">❄️</div>
+    <h1 style="font-size:28px;font-weight:900;text-transform:uppercase;text-shadow:0 4px 0 #2d0a4e,0 0 18px rgba(199,125,255,.55);">TAGEN <span style="color:var(--accent-bright)">GRAM</span></h1>
+    <div style="color:var(--gold-bright);font-size:11px;letter-spacing:2.5px;text-transform:uppercase;margin-top:4px;">Messenger &amp; NFT Gifts</div>
   </div>
-  <div style="width:100%; max-width:360px; background:linear-gradient(160deg, var(--card-2), var(--card)); padding:24px 20px; border-radius:24px; border:1px solid rgba(199,125,255,0.55); box-shadow:var(--depth-shadow);">
-    <h2 id="authTitle" style="text-align:center; margin-bottom:18px; font-size:18px; text-transform:uppercase; color:var(--accent-bright);">Вход</h2>
-    <input type="text" id="authLogin" placeholder="Логин">
-    <input type="password" id="authPassword" placeholder="Пароль">
-    <button class="btn-main" id="mainAuthBtn" style="margin-top:8px;">Войти</button>
-    <button class="btn-grey" id="switchAuthMode" style="width:100%; margin-top:11px; font-size:13px;">Нет аккаунта? Регистрация</button>
+  <div style="width:100%;max-width:360px;background:linear-gradient(160deg,var(--card-2),var(--card));padding:22px 18px;border-radius:24px;border:1px solid rgba(255,215,0,.5);box-shadow:var(--depth-shadow),var(--gold-border);">
+    <h2 id="authTitle" style="text-align:center;margin-bottom:16px;font-size:17px;text-transform:uppercase;color:var(--gold-bright);">Вход в TagenGram</h2>
+    <input type="text" id="authLogin" placeholder="@username (напр. tagen)" autocomplete="username">
+    <input type="text" id="authDisplayName" placeholder="Отображаемое имя" style="display:none;">
+    <input type="password" id="authPassword" placeholder="Пароль" autocomplete="current-password">
+    <button class="btn-main btn-gold" id="mainAuthBtn">Войти</button>
+    <button class="btn-grey" id="switchAuthMode" style="width:100%;margin-top:10px;">Создать новый @username</button>
   </div>
 </div>
 
-<!-- ГЛАВНАЯ -->
-<div id="screen-games" class="page-screen">
-  <header>
-    <div class="logo-container">
-      <div class="logo-icon">TG</div>
-      <div class="logo-text">
-        <div class="logo-title">Tagen<span>Game</span></div>
-      </div>
-    </div>
-    <div class="top-actions">
-      <div class="balance-pill" onclick="openProfile()"><span style="color:var(--accent-bright);">★</span> <span id="uiBalanceTop">0</span></div>
-    </div>
-  </header>
+<header class="topbar" id="topHeader" style="display:none;">
+  <div class="brand-wrap" onclick="playSfx('click');switchTab('chats')">
+    <span style="font-size:18px;">❄️</span>
+    <div class="brand-name">TAGEN <span>GRAM</span></div>
+  </div>
+  <div class="top-right">
+    <button class="sound-btn" id="soundToggleBtn" onclick="toggleSound()" title="Звук">🔊</button>
+    <div class="bal-chip" onclick="playSfx('click');switchTab('profile')"><div id="topTonVal">0</div><small>TON</small></div>
+    <div class="bal-chip stars" onclick="playSfx('click');switchTab('profile')"><div id="topStarsVal">0</div><small>★</small></div>
+  </div>
+</header>
 
-  <div style="padding: 0 16px;">
-    <div style="position:relative; padding: 14px 0 12px;">
-      <div style="color:var(--accent-bright); font-size:11px; font-weight:800; letter-spacing:2px; text-transform:uppercase; margin-bottom:7px; display:inline-flex; align-items:center; gap:7px; padding: 5px 10px; border-radius: 999px; background: rgba(199, 125, 255, 0.12); border: 1px solid rgba(199, 125, 255, 0.4);">
-        <div style="width:7px; height:7px; background:var(--cyan); border-radius:50%; box-shadow:0 0 8px var(--cyan);"></div> Live Table
-      </div>
-      <div style="font-size:40px; font-weight:900; line-height:0.94; letter-spacing:-1.5px; text-transform:uppercase; margin-bottom:10px; color:#fff; text-shadow: 0 4px 0 #2d0a4e, 0 10px 24px rgba(0,0,0,0.85);">
-        Лови куш<br><span style="color:var(--accent-bright); display:block; font-size:44px; text-shadow: 0 4px 0 #3c096c, 0 12px 26px rgba(0,0,0,0.9);">На максимуме</span>
-      </div>
+<div id="screen-chats" class="page-screen">
+  <div class="pad">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <h2 style="font-size:20px;font-weight:900;">💬 Чаты</h2>
+      <button class="btn-grey" onclick="playSfx('click');switchTab('contacts')">+ Новый чат</button>
     </div>
-
-    <div class="live-table-card" style="background: linear-gradient(155deg, #2b1846 0%, #190e2b 58%, #120920 100%); border-radius:24px; padding:16px; border:1.5px solid rgba(224, 170, 255, 0.65); margin-bottom:20px; box-shadow: var(--depth-shadow);">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <div style="background:rgba(199,125,255,0.22); color:#fff; font-size:10.5px; font-weight:900; padding:5px 11px; border-radius:8px; border:1px solid rgba(224,170,255,0.75); text-transform:uppercase;">ДРОП ЛАЙВ</div>
-        <div style="font-size:11px; font-weight:800; color:#7dd3fc; background:rgba(56,189,248,0.14); border:1px solid rgba(56,189,248,0.45); padding:4px 9px; border-radius:999px;">● Лента активна</div>
-      </div>
-      <div id="liveFeedBar" style="background:#0d0618; border:1.5px solid rgba(224,170,255,0.55); border-radius:16px; padding:10px 12px; display:flex; gap:8px; overflow-x:auto; white-space:nowrap; min-height:48px;">
-        <!-- Сюда падают дропы -->
-      </div>
-    </div>
-
-    <div style="font-size:14px; font-weight:900; text-transform:uppercase; letter-spacing:1.2px; margin-bottom:14px; color:var(--accent-bright); display:flex; align-items:center; gap:9px;">
-      <div style="width:5px; height:17px; background: linear-gradient(180deg, var(--accent-bright), var(--accent-dk)); border-radius:3px;"></div> Арсенал
-    </div>
-    
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; padding-bottom:20px;">
-      <div class="game-card" onclick="openGame('mines')" style="background: linear-gradient(160deg, #231438 0%, #150c23 100%); border:1px solid rgba(199, 125, 255, 0.45); border-radius:24px; padding:18px 16px; position:relative; cursor:pointer; box-shadow: var(--depth-shadow);">
-        <div style="display:inline-block; background:rgba(199,125,255,0.16); color:var(--accent-bright); font-size:9.5px; font-weight:800; padding:4px 9px; border-radius:7px; margin-bottom:20px;">Минное поле</div>
-        <div style="font-size:21px; font-weight:900; text-transform:uppercase; margin-bottom:6px;">Мины</div>
-        <div style="font-size:11.5px; color:var(--dim); font-weight:600;">Открывай и забирай</div>
-      </div>
-      <div class="game-card" onclick="openGame('cases')" style="background: linear-gradient(160deg, #231438 0%, #150c23 100%); border:1px solid rgba(199, 125, 255, 0.45); border-radius:24px; padding:18px 16px; position:relative; cursor:pointer; box-shadow: var(--depth-shadow);">
-        <div style="display:inline-block; background:rgba(199,125,255,0.16); color:var(--accent-bright); font-size:9.5px; font-weight:800; padding:4px 9px; border-radius:7px; margin-bottom:20px;">6 кейсов</div>
-        <div style="font-size:21px; font-weight:900; text-transform:uppercase; margin-bottom:6px;">Кейсы</div>
-        <div style="font-size:11.5px; color:var(--dim); font-weight:600;">Крути и забирай</div>
-      </div>
-      <div class="game-card" onclick="openGame('rocket')" style="background: linear-gradient(160deg, #231438 0%, #150c23 100%); border:1px solid rgba(199, 125, 255, 0.45); border-radius:24px; padding:18px 16px; position:relative; cursor:pointer; box-shadow: var(--depth-shadow);">
-        <div style="display:inline-block; background:rgba(199,125,255,0.16); color:var(--accent-bright); font-size:9.5px; font-weight:800; padding:4px 9px; border-radius:7px; margin-bottom:20px;">Кэш до 5.00x</div>
-        <div style="font-size:21px; font-weight:900; text-transform:uppercase; margin-bottom:6px;">Ракетка</div>
-        <div style="font-size:11.5px; color:var(--dim); font-weight:600;">Взлёт вверх</div>
-      </div>
-      <div class="game-card" onclick="openGame('upgrade')" style="background: linear-gradient(160deg, #231438 0%, #150c23 100%); border:1px solid rgba(199, 125, 255, 0.45); border-radius:24px; padding:18px 16px; position:relative; cursor:pointer; box-shadow: var(--depth-shadow);">
-        <div style="display:inline-block; background:rgba(199,125,255,0.16); color:var(--accent-bright); font-size:9.5px; font-weight:800; padding:4px 9px; border-radius:7px; margin-bottom:20px;">NFT + Предметы</div>
-        <div style="font-size:21px; font-weight:900; text-transform:uppercase; margin-bottom:6px;">Апгрейд</div>
-        <div style="font-size:11.5px; color:var(--dim); font-weight:600;">Повышай ставки</div>
-      </div>
-      <div class="game-card" onclick="openBonusWheel()" style="background: linear-gradient(160deg, #380f0f 0%, #1a0808 100%); border:1px solid rgba(239, 68, 68, 0.6); border-radius:24px; padding:18px 16px; position:relative; cursor:pointer; box-shadow: var(--depth-shadow); grid-column: span 2;">
-        <div style="display:inline-block; background:rgba(239,68,68,0.16); color:#fca5a5; font-size:9.5px; font-weight:800; padding:4px 9px; border-radius:7px; margin-bottom:20px;">Бесплатный бонус</div>
-        <div style="font-size:21px; font-weight:900; text-transform:uppercase; margin-bottom:6px; color:#fca5a5;">Колесо Фортуны</div>
-        <div style="font-size:11.5px; color:#fca5a5; font-weight:600;">Крути раз в 24 часа</div>
-      </div>
-    </div>
+    <div id="chatsList"></div>
   </div>
 </div>
 
-<!-- МИНЫ -->
-<div id="screen-mines" class="page-screen">
-  <div class="game-header" style="display:flex; align-items:center; gap:14px; margin-bottom:18px; padding: 15px 16px 0;">
-    <div class="back-btn" onclick="switchTab('games')" style="width:42px; height:42px; background:linear-gradient(155deg, var(--card-3), var(--card-2)); border-radius:13px; border:1px solid rgba(199,125,255,0.5); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; color:#fff;">←</div>
-    <div style="font-size:21px; font-weight:900; text-transform:uppercase;">Мины</div>
+<div id="screen-room" class="page-screen">
+  <div class="room-header">
+    <button class="btn-grey" style="padding:7px 11px;" onclick="playSfx('click');exitChatRoom()">←</button>
+    <div id="roomPeerInfo" style="flex:1;min-width:0;cursor:pointer;" onclick="playSfx('click');openCurrentPeerProfile()">
+      <div id="roomTitle" style="font-size:15px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Чат</div>
+      <div id="roomSub" style="font-size:11px;color:var(--ok);font-weight:700;">в сети</div>
+    </div>
+    <button class="btn-main btn-gold" style="width:auto;padding:7px 11px;font-size:11px;" onclick="playSfx('click');openSendGiftInChat()">🎁 Подарок</button>
   </div>
-  <div style="padding: 0 16px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; background:linear-gradient(155deg, var(--card-2), var(--card)); padding:13px; border-radius:18px; border:1px solid rgba(199,125,255,0.45);">
-      <div style="text-align:center;"><div style="font-size:10px; color:var(--dim); font-weight:700;">МИН</div><div id="minesCountLbl" style="font-size:16px; font-weight:900; color:var(--accent-bright);">3</div></div>
-      <div style="text-align:center;"><div style="font-size:10px; color:var(--dim); font-weight:700;">ПОЛЕ</div><div style="font-size:16px; font-weight:900; color:var(--accent-bright);">3x3</div></div>
-      <div style="text-align:center;"><div style="font-size:10px; color:var(--dim); font-weight:700;">ОТКРЫТО</div><div id="minesOpenedLbl" style="font-size:16px; font-weight:900; color:var(--accent-bright);">0</div></div>
-      <div style="text-align:center;"><div style="font-size:10px; color:var(--dim); font-weight:700;">МНОЖИТЕЛЬ</div><div id="minesMultLbl" style="font-size:16px; font-weight:900; color:var(--accent-bright);">1.00x</div></div>
-    </div>
-    <div id="minesSetup" style="background:linear-gradient(155deg, var(--card-2), var(--card)); padding:16px; border-radius:18px; border:1px solid rgba(199,125,255,0.45); margin-bottom:15px;">
-      <input type="number" id="minesBetInput" placeholder="Ставка (★)" value="100" min="10">
-      <div style="display:flex; gap:6px; margin-bottom:12px;">
-        <button class="btn-grey mine-pill-btn" data-mines="1" onclick="setMines(1)" style="padding:10px; flex:1;">1</button>
-        <button class="btn-grey mine-pill-btn active" data-mines="3" onclick="setMines(3)" style="padding:10px; flex:1;">3</button>
-        <button class="btn-grey mine-pill-btn" data-mines="5" onclick="setMines(5)" style="padding:10px; flex:1;">5</button>
-        <button class="btn-grey mine-pill-btn" data-mines="10" onclick="setMines(10)" style="padding:10px; flex:1;">10</button>
-      </div>
-      <button class="btn-main" id="btnStartMines">Начать игру</button>
-    </div>
-    <div class="mines-grid" id="minesGrid" style="display:none; gap:7px; margin:15px 0; justify-content: center;"></div>
-    <button class="btn-main" id="btnCashout" style="display:none; margin-top: 10px; background:linear-gradient(145deg, #34d399, #059669); color:#04130d;">Забрать <span id="cashoutVal">0</span> ★</button>
+
+  <div class="room-messages" id="roomMessages"></div>
+
+  <div class="room-composer">
+    <label class="icon-round-btn" title="Фото">
+      📷
+      <input type="file" id="chatPhotoInput" accept="image/*" style="display:none;" onchange="sendChatImage(this)">
+    </label>
+    <input type="text" id="chatMsgInput" placeholder="Сообщение..." onkeydown="if(event.key==='Enter')sendChatText()">
+    <button class="icon-round-btn send" onclick="sendChatText()">➤</button>
   </div>
 </div>
 
-<!-- РАКЕТКА -->
-<div id="screen-rocket" class="page-screen">
-  <div class="game-header" style="display:flex; align-items:center; gap:14px; margin-bottom:18px; padding: 15px 16px 0;">
-    <div class="back-btn" onclick="switchTab('games')" style="width:42px; height:42px; background:linear-gradient(155deg, var(--card-3), var(--card-2)); border-radius:13px; border:1px solid rgba(199,125,255,0.5); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; color:#fff;">←</div>
-    <div style="font-size:21px; font-weight:900; text-transform:uppercase;">Ракетка</div>
-  </div>
-  <div style="padding: 0 16px;">
-    <div id="rocketStage" style="position: relative; height: 250px; border-radius: 22px; background: radial-gradient(circle at 50% 25%, rgba(199, 125, 255, 0.18), transparent 55%), linear-gradient(180deg, #0d0618 0%, #190d2d 65%, #23123d 100%); border: 1.5px solid rgba(224, 170, 255, 0.52); overflow: hidden; margin-bottom: 14px;">
-      <div style="position: relative; z-index: 4; padding: 14px 16px 0; display: flex; justify-content: space-between;">
-        <div>
-          <div id="rocketStatusText" style="font-size:10px; color:var(--dim); text-transform:uppercase; font-weight:800;">Ожидание</div>
-          <div id="rocketMultDisplay" style="font-size: 38px; font-weight: 900; line-height: 1; color: #ffffff; text-shadow: 0 3px 0 #2d0a4e;">1.00x</div>
-          <div id="rocketWinPreview" style="font-size:12px; font-weight:800; color:var(--accent-bright); margin-top:5px;">Потенциал: 0 ★</div>
-        </div>
-      </div>
-      <div id="rocketTrail" style="position: absolute; left: 50%; bottom: 36px; width: 6px; height: 0; transform: translateX(-50%); background: linear-gradient(180deg, rgba(224,170,255,0.9), transparent);"></div>
-      <div id="rocketShip" style="position: absolute; left: 50%; bottom: 24px; transform: translate(-50%, 0); font-size: 46px; z-index: 3;">🚀</div>
+<div id="screen-contacts" class="page-screen">
+  <div class="pad">
+    <h2 style="font-size:20px;font-weight:900;margin-bottom:12px;">👥 Люди</h2>
+    <div class="search-box">
+      <input type="text" id="usersSearchInput" placeholder="Поиск по @username или имени..." oninput="loadContacts()">
     </div>
-    <div style="background: linear-gradient(155deg, var(--card-2), var(--card)); padding: 16px; border-radius: 18px; border: 1px solid rgba(199,125,255,0.45);">
-      <input type="number" id="rocketBetInput" placeholder="Ставка (★)" value="100" min="10">
-      <button class="btn-main" id="btnRocketAction">Запустить ракету</button>
-      <div id="rocketHistory" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px;"></div>
-    </div>
+    <div id="contactsList"></div>
   </div>
 </div>
 
-<!-- КЕЙСЫ -->
-<div id="screen-cases" class="page-screen">
-  <div class="game-header" style="display:flex; align-items:center; gap:14px; margin-bottom:18px; padding: 15px 16px 0;">
-    <div class="back-btn" onclick="switchTab('games')" style="width:42px; height:42px; background:linear-gradient(155deg, var(--card-3), var(--card-2)); border-radius:13px; border:1px solid rgba(199,125,255,0.5); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; color:#fff;">←</div>
-    <div style="font-size:21px; font-weight:900; text-transform:uppercase;">Кейсы</div>
+<div id="screen-gifts" class="page-screen">
+  <div class="pad">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <h2 style="font-size:20px;font-weight:900;">🎁 Подарки <span id="giftsCount" style="color:var(--dim);font-size:15px;">(0)</span></h2>
+      <select class="btn-grey" id="giftsSort" onchange="playSfx('click');renderGiftsStore()">
+        <option value="popular">Популярные</option>
+        <option value="price_desc">Дороже</option>
+        <option value="price_asc">Дешевле</option>
+      </select>
+    </div>
+    <div class="search-box">
+      <input type="text" id="giftsSearch" placeholder="Поиск подарка..." oninput="renderGiftsStore()">
+    </div>
+    <div class="filter-pills" id="giftsFilters">
+      <button class="f-pill active" onclick="setGiftFilter('all', this)">Все</button>
+      <button class="f-pill" onclick="setGiftFilter('NFT', this)">💎 NFT</button>
+      <button class="f-pill" onclick="setGiftFilter('Зима', this)">❄️ Зима</button>
+      <button class="f-pill" onclick="setGiftFilter('Редкий', this)">🔑 Редкие</button>
+      <button class="f-pill" onclick="setGiftFilter('fav', this)">❤️ Избранное</button>
+    </div>
+    <div class="gifts-grid" id="giftsStoreGrid"></div>
   </div>
-  <div style="padding: 0 16px;">
-    <div id="casesList">
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:13px;">
-        <div class="case-card" onclick="startCase('starter', 100)" style="background:linear-gradient(160deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.45); border-radius:22px; padding:20px 10px; text-align:center; cursor:pointer;">
-          <div style="width:96px; height:96px; margin:0 auto 10px; display:flex; justify-content:center; align-items:center; font-size:50px;">📦</div>
-          <div style="font-size:15px; font-weight:900;">Стартовый</div><div style="color:var(--accent-bright); font-weight:800; margin-top:5px; font-size:13px;">100 ★</div>
+</div>
+
+<div id="screen-profile" class="page-screen">
+  <div class="pad">
+    <div class="tg-profile-hero">
+      <div class="tg-profile-banner" id="myProfBanner"></div>
+      <div class="tg-profile-body">
+        <div class="tg-profile-avatar" id="myProfAvatar">T</div>
+        <div style="font-size:21px;font-weight:900;"><span id="myProfName">Игрок</span> <span id="myProfEmoji">❄️</span></div>
+        <div id="myProfUsername" style="font-size:13px;color:var(--accent-bright);font-weight:800;margin-top:2px;">@tagen</div>
+        <div id="myProfBio" style="font-size:12.5px;color:var(--dim);margin-top:8px;line-height:1.4;">Описание профиля</div>
+
+        <div class="tg-stats-strip">
+          <div class="tg-stat-box">
+            <div class="tg-stat-num" id="myStatGifts">0</div>
+            <div class="tg-stat-lbl">🎁 Подарков</div>
+          </div>
+          <div class="tg-stat-box">
+            <div class="tg-stat-num" style="color:#f59e0b;" id="myStatTon">0</div>
+            <div class="tg-stat-lbl">TON</div>
+          </div>
+          <div class="tg-stat-box">
+            <div class="tg-stat-num" style="color:var(--gold-bright);" id="myStatStars">0</div>
+            <div class="tg-stat-lbl">Звёзды ★</div>
+          </div>
         </div>
-        <div class="case-card" onclick="startCase('pro', 500)" style="background:linear-gradient(160deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.45); border-radius:22px; padding:20px 10px; text-align:center; cursor:pointer;">
-          <div style="width:96px; height:96px; margin:0 auto 10px; display:flex; justify-content:center; align-items:center; font-size:50px;">🎁</div>
-          <div style="font-size:15px; font-weight:900;">Про</div><div style="color:var(--accent-bright); font-weight:800; margin-top:5px; font-size:13px;">500 ★</div>
-        </div>
-        <div class="case-card" onclick="startCase('magic', 1000)" style="background:linear-gradient(160deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.45); border-radius:22px; padding:20px 10px; text-align:center; cursor:pointer;">
-          <div style="width:96px; height:96px; margin:0 auto 10px; display:flex; justify-content:center; align-items:center; font-size:50px;">🔮</div>
-          <div style="font-size:15px; font-weight:900;">Магический</div><div style="color:var(--accent-bright); font-weight:800; margin-top:5px; font-size:13px;">1000 ★</div>
-        </div>
-        <div class="case-card" onclick="startCase('winter', 2500)" style="background:linear-gradient(160deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.45); border-radius:22px; padding:20px 10px; text-align:center; cursor:pointer;">
-          <div style="width:96px; height:96px; margin:0 auto 10px; display:flex; justify-content:center; align-items:center; font-size:50px;">❄️</div>
-          <div style="font-size:15px; font-weight:900;">Зимний</div><div style="color:var(--accent-bright); font-weight:800; margin-top:5px; font-size:13px;">2500 ★</div>
-        </div>
-        <div class="case-card" onclick="startCase('legend', 5000)" style="background:linear-gradient(160deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.45); border-radius:22px; padding:20px 10px; text-align:center; cursor:pointer;">
-          <div style="width:96px; height:96px; margin:0 auto 10px; display:flex; justify-content:center; align-items:center; font-size:50px;">⚡</div>
-          <div style="font-size:15px; font-weight:900;">Легенда</div><div style="color:var(--accent-bright); font-weight:800; margin-top:5px; font-size:13px;">5000 ★</div>
-        </div>
-        <div class="case-card" onclick="startCase('inferno', 10000)" style="background:linear-gradient(160deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.45); border-radius:22px; padding:20px 10px; text-align:center; cursor:pointer;">
-          <div style="width:96px; height:96px; margin:0 auto 10px; display:flex; justify-content:center; align-items:center; font-size:50px;">🔥</div>
-          <div style="font-size:15px; font-weight:900;">Адский</div><div style="color:var(--accent-bright); font-weight:800; margin-top:5px; font-size:13px;">10000 ★</div>
+
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:14px;">
+          <button class="btn-grey" onclick="playSfx('click');openEditProfileModal()">✏️ Изменить</button>
+          <button class="btn-main btn-gold" style="width:auto;padding:9px 14px;" onclick="playSfx('click');switchTab('gifts')">🎁 Купить подарок</button>
         </div>
       </div>
     </div>
 
-    <div id="caseRoller" style="display:none; margin-top:20px;">
-      <button class="btn-grey" onclick="backToCases()" style="margin-bottom:15px; width:100%;">← Назад к списку</button>
-      <div style="width:100%; height:104px; background:linear-gradient(160deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.6); position:relative; overflow:hidden; display:flex; align-items:center; border-radius:16px;">
-        <div id="rouletteStrip" style="display:flex; position:absolute; left:0;"></div>
-        <div style="position:absolute; left:50%; top:0; bottom:0; width:4px; background:var(--accent-bright); transform:translateX(-50%); z-index:10;"></div>
-      </div>
-      <div id="caseActions" style="display:none; gap:10px; margin-top:15px;">
-          <button class="btn-main" id="btnCaseSell" style="flex:1;">Продать</button>
-          <button class="btn-main" id="btnCaseAgain" style="flex:1; background:linear-gradient(145deg, var(--card-3), var(--card-2)); color:#fff;">Ещё раз</button>
-      </div>
+    <div class="tg-tabs-bar">
+      <button class="tg-tab-btn active" id="profTabGiftsBtn" onclick="playSfx('click');switchProfileSubtab('gifts')">🎁 Подарки (<span id="myProfileGiftsCount">0</span>)</button>
+      <button class="tg-tab-btn" id="profTabWalletBtn" onclick="playSfx('click');switchProfileSubtab('wallet')">💳 Кошелёк и обмен</button>
     </div>
-  </div>
-</div>
 
-<!-- ОСТАЛЬНЫЕ ЭКРАНЫ (Апгрейд, Инвентарь, Кошелек, Настройки, Админка) БУДУТ В ЧАСТИ 3 --><!-- АПГРЕЙД (НОВОЕ КОЛЕСО) -->
-<div id="screen-upgrade" class="page-screen">
-  <div class="game-header" style="display:flex; align-items:center; gap:14px; margin-bottom:18px; padding: 15px 16px 0;">
-    <div class="back-btn" onclick="switchTab('games')" style="width:42px; height:42px; background:linear-gradient(155deg, var(--card-3), var(--card-2)); border-radius:13px; border:1px solid rgba(199,125,255,0.5); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; color:#fff;">←</div>
-    <div style="font-size:21px; font-weight:900; text-transform:uppercase;">Апгрейд</div>
-  </div>
-  <div style="padding: 0 16px; display:flex; flex-direction:column; align-items:center;">
-    
-    <!-- Круглое колесо -->
-    <div style="position: relative; width: 240px; height: 240px; margin: 10px 0 20px;">
-      <div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(from 180deg, #ef4444 0%, #f59e0b 25%, #10b981 50%, #10b981 50%, #2a2a4a 50%, #2a2a4a 100%); box-shadow: inset 0 0 20px rgba(0,0,0,0.8);"></div>
-      <div style="position: absolute; top: 15px; left: 15px; right: 15px; bottom: 15px; background: #16162a; border-radius: 50%; box-shadow: 0 0 15px rgba(0,0,0,0.5);"></div>
-      <div id="upgNeedle" style="position: absolute; width: 4px; height: 120px; background: #ffd700; bottom: 50%; left: calc(50% - 2px); transform-origin: bottom center; transform: rotate(-90deg); z-index: 5; transition: transform 2s cubic-bezier(0.1, 0.7, 0.1, 1); box-shadow: 0 0 10px #ffd700;"></div>
-      <div style="position: absolute; z-index: 10; text-align: center; background: #16162a; width: 100px; height: 100px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid #2a2a4a; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-        <div style="font-size:12px; color:#aaa; margin-bottom:5px;">Шанс</div>
-        <div id="upgradeChanceText" style="font-size:22px; font-weight:bold; color:#fff;">0%</div>
+    <div id="profileSubtabGifts">
+      <div class="gifts-grid" id="myProfileGiftsGrid"></div>
+    </div>
+
+    <div id="profileSubtabWallet" style="display:none;">
+      <div class="panel-card">
+        <h3>💳 Обмен звёзд на TON</h3>
+        <div style="display:flex;gap:8px;">
+          <input type="number" id="exStarsInput" placeholder="Кол-во ★ (100★ = 1 TON)" style="margin-bottom:0;">
+          <button class="btn-main btn-gold" style="width:auto;padding:0 15px;" onclick="exchangeStars()">Обмен</button>
+        </div>
       </div>
     </div>
 
-    <div class="upgrade-slots" style="display: flex; justify-content: space-between; width: 100%; gap: 10px; margin-bottom: 15px;">
-      <div id="upgradeMySlot" class="slot-card" onclick="openMyUpgradeSelect()" style="flex: 1; background: #12121a; border: 2px dashed #444; border-radius: 16px; height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
-        <div style="font-size:10px; color:var(--dim); margin-bottom:5px;">Ставка (★ / NFT)</div>
-        <div id="upgMyContent" style="font-size:13px; font-weight:800;">Выбрать</div>
-      </div>
-      <div style="display:flex; align-items:center; font-size:20px; color:var(--accent-bright);">➔</div>
-      <div id="upgradeTargetSlot" class="slot-card" onclick="openTargetUpgradeSelect()" style="flex: 1; background: #12121a; border: 2px dashed #444; border-radius: 16px; height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
-        <div style="font-size:10px; color:var(--dim); margin-bottom:5px;">Получить</div>
-        <div id="upgTargetContent" style="font-size:13px; font-weight:800;">Выбрать</div>
-      </div>
-    </div>
-
-    <button class="btn-main" id="btnDoUpgrade">Улучшить</button>
+    <button class="btn-main btn-gold" id="btnOpenAdmin" style="display:none;margin-top:14px;margin-bottom:10px;" onclick="openAdminModal()">🛡 Админ-панель</button>
+    <button class="btn-danger" style="width:100%;margin-top:10px;" onclick="logout()">Выйти из аккаунта</button>
   </div>
 </div>
 
-<!-- ИНВЕНТАРЬ -->
-<div id="screen-inventory" class="page-screen">
-  <div class="game-header" style="display:flex; align-items:center; gap:14px; margin-bottom:18px; padding: 15px 16px 0;">
-    <div style="font-size:21px; font-weight:900; text-transform:uppercase;">Инвентарь</div>
-  </div>
-  <div class="inventory" id="inventory" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(98px,1fr)); gap:11px; padding:0 16px;"></div>
-</div>
-
-<!-- КОШЕЛЕК -->
-<div id="screen-wallet" class="page-screen">
-  <div class="game-header" style="display:flex; align-items:center; gap:14px; margin-bottom:18px; padding: 15px 16px 0;">
-    <div style="font-size:21px; font-weight:900; text-transform:uppercase;">Кошелек</div>
-  </div>
-  <div style="padding: 0 16px;">
-      <div style="background:linear-gradient(155deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.48); border-radius:20px; padding:18px; margin-bottom:15px;">
-        <h3 style="font-size:13.5px; font-weight:800; margin-bottom:12px; color:var(--accent-bright); text-transform:uppercase;">Пополнение</h3>
-        <input type="number" id="depositAmount" placeholder="Введите сумму (★)">
-        <button class="btn-main" id="btnWalletDeposit">Пополнить</button>
-      </div>
-      <div style="background:linear-gradient(155deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.48); border-radius:20px; padding:18px; margin-bottom:15px;">
-        <h3 style="font-size:13.5px; font-weight:800; margin-bottom:12px; color:var(--accent-bright); text-transform:uppercase;">Вывод средств</h3>
-        <input type="number" id="withdrawAmount" placeholder="Введите сумму (★)">
-        <button class="btn-main" id="btnWalletWithdraw" style="background:linear-gradient(145deg, var(--card-3), var(--card-2)); color:#fff;">Вывести</button>
-      </div>
-  </div>
-</div>
-
-<!-- НАСТРОЙКИ -->
-<div id="screen-settings" class="page-screen">
-  <div class="game-header" style="display:flex; align-items:center; gap:14px; margin-bottom:18px; padding: 15px 16px 0;">
-    <div style="font-size:21px; font-weight:900; text-transform:uppercase;">Настройки</div>
-  </div>
-  <div style="padding: 0 16px;">
-    <div style="background:linear-gradient(155deg, var(--card-2), var(--card)); border:1px solid rgba(199,125,255,0.48); border-radius:20px; padding:18px; margin-bottom:15px;">
-      <h3 style="font-size:13.5px; font-weight:800; margin-bottom:12px; color:var(--accent-bright); text-transform:uppercase;">Звук</h3>
-      <div style="margin-bottom:14px;">
-        <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700;"><span>Музыка</span><span id="bgmVolLabel" style="color:var(--accent-bright);">30%</span></div>
-        <input type="range" id="bgmVolumeSlider" class="vol-slider" min="0" max="100" value="30" style="width:100%;">
-      </div>
-      <div>
-        <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700;"><span>Эффекты</span><span id="sfxVolLabel" style="color:var(--accent-bright);">100%</span></div>
-        <input type="range" id="sfxVolumeSlider" class="vol-slider" min="0" max="100" value="100" style="width:100%;">
-      </div>
-    </div>
-    <button class="btn-main" id="adminFromSettings" style="display:none; background:linear-gradient(145deg, #ffe066, var(--gold)); color:#090510; margin-bottom:11px;">🛡 Админ-панель</button>
-    <button class="btn-main" id="logoutBtn" style="background:linear-gradient(145deg, #f87171, var(--bad)); color:#fff; box-shadow:0 5px 0 #7f1d1d;">Выйти</button>
-  </div>
-</div>
-
-<!-- АДМИНКА -->
-<div id="screen-admin" class="page-screen">
-  <div class="game-header" style="display:flex; align-items:center; gap:14px; margin-bottom:18px; padding: 15px 16px 0;">
-    <div class="back-btn" onclick="switchTab('settings')" style="width:42px; height:42px; background:linear-gradient(155deg, var(--card-3), var(--card-2)); border-radius:13px; border:1px solid rgba(199,125,255,0.5); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; color:#fff;">←</div>
-    <div style="font-size:21px; font-weight:900; text-transform:uppercase;">Админка</div>
-  </div>
-  <div style="padding: 0 16px;" id="adminContent"></div>
-</div>
-
-<!-- НАВИГАЦИЯ -->
 <nav class="bottom-nav" id="bottomNav" style="display:none;">
-  <button class="nav-item active" data-tab="games" onclick="switchTab('games')"><span class="ni">🏠</span>Главная</button>
-  <button class="nav-item" data-tab="inventory" onclick="switchTab('inventory')"><span class="ni">🎒</span>Инвентарь</button>
-  <button class="nav-item" data-tab="wallet" onclick="switchTab('wallet')"><span class="ni">💼</span>Баланс</button>
-  <button class="nav-item" data-tab="settings" onclick="switchTab('settings')"><span class="ni">⚙️</span>Настройки</button>
+  <button class="nav-item active" data-tab="chats" onclick="playSfx('click');switchTab('chats')"><span class="ni">💬</span>Чаты</button>
+  <button class="nav-item" data-tab="contacts" onclick="playSfx('click');switchTab('contacts')"><span class="ni">👥</span>Люди</button>
+  <button class="nav-item" data-tab="gifts" onclick="playSfx('click');switchTab('gifts')"><span class="ni">🎁</span>Подарки</button>
+  <button class="nav-item" data-tab="profile" onclick="playSfx('click');switchTab('profile')"><span class="ni">👤</span>Профиль</button>
 </nav>
 
-<!-- МОДАЛКА ПРОФИЛЯ -->
-<div class="modal" id="profileModal">
-  <div class="box" style="text-align:left;">
-    <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
-      <div style="width:70px; height:70px; background:var(--card-3); border:1px solid var(--accent); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:900; color:var(--accent-bright);">T</div>
-      <div>
-        <h2 id="profileName" style="font-size:20px; font-weight:900;">Игрок</h2>
-        <div style="color:var(--dim); font-size:12px;">@user</div>
-      </div>
-      <div style="margin-left:auto; text-align:right;">
-        <div style="font-size:18px; font-weight:900; color:var(--accent-bright);" id="profileBalance">0 ★</div>
-      </div>
-    </div>
-    <button class="btn-grey" onclick="closeModal('profileModal')" style="margin-top:20px; width:100%;">Закрыть</button>
-  </div>
-</div>
-
-<!-- МОДАЛКА ВЫБОРА ПРЕДМЕТА / NFT -->
-<div class="modal" id="selectItemModal">
-  <div class="box">
-    <h3 style="margin-bottom:15px; text-align:center; text-transform:uppercase;" id="selectItemTitle">Выберите предмет</h3>
-    <div id="mySelectOptions" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
-        <button class="btn-main" onclick="selectMyBet('stars')" style="padding:12px; font-size:14px;">★ Поставить Звёзды</button>
-        <button class="btn-main" onclick="selectMyBet('items')" style="padding:12px; font-size:14px; background:linear-gradient(145deg, var(--card-3), var(--card-2)); color:#fff;">🎁 Предмет из инвентаря</button>
-        <button class="btn-main" onclick="selectMyBet('nft')" style="padding:12px; font-size:14px; background:linear-gradient(145deg, #0284c7, #1e3a8a); color:#fff;">💎 Выбрать NFT</button>
-    </div>
-    <div id="myItemsList" style="display:none; grid-template-columns:repeat(auto-fill,minmax(82px,1fr)); gap:10px; max-height:50vh; overflow-y:auto; padding:5px;"></div>
-    <div id="targetItemsList" style="display:none; grid-template-columns:repeat(auto-fill,minmax(82px,1fr)); gap:10px; max-height:50vh; overflow-y:auto; padding:5px;"></div>
-    <button class="btn-grey" onclick="closeModal('selectItemModal')" style="margin-top:15px; padding:12px; width:100%;">Отмена</button>
-  </div>
-</div>
-
-<!-- МОДАЛКА КОЛЕСА БОНУСОВ -->
-<div class="modal" id="bonusModal">
-  <div class="box" style="text-align:center;">
-    <h2 style="margin-bottom:10px; color:var(--accent-bright);">Колесо Фортуны</h2>
-    <p style="font-size:12px; color:var(--dim); margin-bottom:15px;">Крути раз в 24 часа и получай звёзды!</p>
-    <div id="bonusWheelResult" style="font-size:30px; font-weight:900; margin-bottom:20px; min-height:40px;"></div>
-    <button class="btn-main" id="btnSpinWheel" style="background:linear-gradient(145deg, #ef4444, #991b1b); color:#fff;">Крутить</button>
-    <button class="btn-grey" onclick="closeModal('bonusModal')" style="margin-top:10px; width:100%;">Закрыть</button>
-  </div>
+<div class="modal" id="mainModal">
+  <div class="box" id="mainModalBody"></div>
 </div>
 
 <script>
-// ВЕСЬ JAVASCRIPT ИЗ ТВОЕГО СТАРОГО КОДА (с добавлением новых функций)
-// ... (Вставь сюда весь JS-код из своего предыдущего index.html, который начинается с let currentUser = null;) ...
-// Ниже только новые функции, которые нужно добавить в конец скрипта перед закрывающим </script>
+const $ = id => document.getElementById(id);
+let TOKEN = localStorage.getItem('tg_token') || '';
+let ME = null;
+let CATALOG = [];
+let USERS_CACHE = [];
+let ACTIVE_CHAT_ID = null;
+let ACTIVE_CHAT_PEER = null;
+let GIFT_FILTER = 'all';
+let AUTH_MODE = 'login';
+let pollTimer = null;
+let lastMsgCount = 0;
+let SOUND_ENABLED = localStorage.getItem('tg_sound') !== '0';
 
-// --- СНЕГОПАД ---
-function createSnow() {
-  const snowContainer = document.body;
-  for (let i = 0; i < 50; i++) {
-    let snowflake = document.createElement('div');
-    snowflake.className = 'snowflake';
-    snowflake.innerHTML = '❄';
-    snowflake.style.left = Math.random() * 100 + 'vw';
-    snowflake.style.animationDuration = Math.random() * 3 + 2 + 's';
-    snowflake.style.opacity = Math.random();
-    snowflake.style.fontSize = Math.random() * 10 + 10 + 'px';
-    snowContainer.appendChild(snowflake);
-    setTimeout(() => { snowflake.remove(); }, 5000);
+let audioCtx = null;
+function getAudioCtx() {
+  if (!SOUND_ENABLED) return null;
+  if (!audioCtx) {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (Ctx) audioCtx = new Ctx();
   }
-}
-setInterval(createSnow, 300);
-
-// --- КОЛЕСО ФОРТУНЫ ---
-function openBonusWheel() {
-  document.getElementById('bonusModal').classList.add('show');
-  document.getElementById('bonusWheelResult').textContent = '';
-  document.getElementById('btnSpinWheel').disabled = false;
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+  return audioCtx;
 }
 
-document.getElementById('btnSpinWheel').onclick = async () => {
-  const btn = document.getElementById('btnSpinWheel');
-  btn.disabled = true;
-  btn.textContent = 'Крутим...';
-  const res = await apiPost('/api/bonus/spin', {});
-  const data = await res.json();
-  
-  if (res.ok) {
-    document.getElementById('bonusWheelResult').innerHTML = `<span style="color:var(--ok);">+${data.win} ★</span>`;
-    document.getElementById('uiBalanceTop').textContent = data.balance;
-    toast('Бонус получен!', 'success');
-  } else {
-    document.getElementById('bonusWheelResult').innerHTML = `<span style="color:var(--bad); font-size:14px;">${data.error}</span>`;
-  }
-  btn.textContent = 'Крутить';
-  btn.disabled = false;
+function playTone(freq, duration = 0.09, type = 'sine', gainVal = 0.08, delay = 0, slideTo = null) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const start = ctx.currentTime + delay;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, start);
+  if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, start + duration);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.linearRampToValueAtTime(gainVal, start + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(start);
+  osc.stop(start + duration + 0.02);
+}
+
+function playSfx(name) {
+  if (!SOUND_ENABLED) return;
+  if (name === 'click') playTone(620, 0.055, 'triangle', 0.06, 0, 780);
+  else if (name === 'send') playTone(520, 0.09, 'sine', 0.09, 0, 880);
+  else if (name === 'recv') {
+    playTone(660, 0.08, 'sine', 0.08, 0);
+    playTone(990, 0.11, 'sine', 0.08, 0.07);
+  } else if (name === 'gift') {
+    playTone(523.25, 0.11, 'triangle', 0.11, 0);
+    playTone(659.25, 0.11, 'triangle', 0.11, 0.08);
+    playTone(783.99, 0.13, 'triangle', 0.12, 0.16);
+    playTone(1046.5, 0.22, 'sine', 0.12, 0.24);
+  } else if (name === 'pin') playTone(740, 0.07, 'sine', 0.08, 0, 1020);
+  else if (name === 'error') playTone(240, 0.14, 'sawtooth', 0.07, 0, 160);
+}
+
+function toggleSound() {
+  SOUND_ENABLED = !SOUND_ENABLED;
+  localStorage.setItem('tg_sound', SOUND_ENABLED ? '1' : '0');
+  updateSoundBtn();
+  if (SOUND_ENABLED) playSfx('pin');
+  toast(SOUND_ENABLED ? 'Звук включён 🔊' : 'Звук выключен 🔇');
+}
+
+function updateSoundBtn() {
+  const btn = $('soundToggleBtn');
+  if (!btn) return;
+  btn.textContent = SOUND_ENABLED ? '🔊' : '🔇';
+  btn.classList.toggle('muted', !SOUND_ENABLED);
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function toast(msg, type = 'info') {
+  const d = document.createElement('div');
+  d.className = 'toast';
+  if (type === 'error') { d.style.background = 'linear-gradient(145deg,#f87171,#ef4444)'; d.style.color = '#fff'; }
+  if (type === 'success') { d.style.background = 'linear-gradient(145deg,#6ee7b7,#10b981)'; d.style.color = '#04130d'; }
+  d.textContent = msg;
+  $('toastContainer').appendChild(d);
+  setTimeout(() => d.remove(), 2800);
+}
+function closeModal() { playSfx('click'); $('mainModal').classList.remove('show'); }
+
+async function apiGet(url) { return fetch(url, { headers: { 'x-auth-token': TOKEN } }); }
+async function apiPost(url, body) {
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-auth-token': TOKEN },
+    body: JSON.stringify(body || {})
+  });
+}
+
+function getGiftSvg(type) {
+  const map = {
+    pepe: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="60" rx="28" ry="25" fill="#f97316"/><circle cx="38" cy="34" r="11" fill="#fb923c"/><circle cx="62" cy="34" r="11" fill="#fb923c"/><circle cx="38" cy="34" r="6" fill="#fff"/><circle cx="62" cy="34" r="6" fill="#fff"/><circle cx="39" cy="34" r="3" fill="#111"/><circle cx="61" cy="34" r="3" fill="#111"/><path d="M50 58 C44 50 32 54 32 63 C32 72 50 82 50 82 C50 82 68 72 68 63 C68 54 56 50 50 58 Z" fill="#22c55e" stroke="#14532d" stroke-width="2"/></svg>`,
+    cup_gold: `<svg viewBox="0 0 100 100"><path d="M30 22 H70 L64 56 C62 66 38 66 36 56 Z" fill="#f59e0b"/><circle cx="50" cy="40" r="13" fill="#0ea5e9" stroke="#fef08a" stroke-width="2.5"/><rect x="44" y="63" width="12" height="14" fill="#d97706"/><rect x="33" y="77" width="34" height="9" rx="3" fill="#92400e"/></svg>`,
+    cup_silver: `<svg viewBox="0 0 100 100"><circle cx="50" cy="36" r="18" fill="#f59e0b"/><path d="M28 42 C28 60 40 66 50 66 C60 66 72 60 72 42" fill="none" stroke="#e2e8f0" stroke-width="6"/><rect x="44" y="64" width="12" height="14" fill="#cbd5e1"/><rect x="34" y="78" width="32" height="8" rx="3" fill="#38bdf8"/></svg>`,
+    locket: `<svg viewBox="0 0 100 100"><path d="M50 82 C50 82 18 62 18 38 C18 24 30 18 41 25 C46 28 50 34 50 34 C50 34 54 28 59 25 C70 18 82 24 82 38 C82 62 50 82 50 82 Z" fill="#f43f5e" stroke="#fecdd3" stroke-width="3"/></svg>`,
+    dog: `<svg viewBox="0 0 100 100"><path d="M26 52 C26 26 74 26 74 52 L78 80 H22 Z" fill="#7c3aed" stroke="#38bdf8" stroke-width="3"/><circle cx="50" cy="50" r="16" fill="#f5d0fe"/></svg>`,
+    cap: `<svg viewBox="0 0 100 100"><path d="M26 56 C26 34 74 34 74 56 Z" fill="#4b5563"/><path d="M46 56 L84 62 C78 70 54 70 34 62 Z" fill="#1f2937"/><path d="M46 43 L56 39 L52 49 Z" fill="#38bdf8"/></svg>`,
+    glasses: `<svg viewBox="0 0 100 100"><path d="M20 42 H80 V58 C80 68 56 68 52 56 H48 C44 68 20 68 20 58 Z" fill="rgba(186,230,253,.45)" stroke="#38bdf8" stroke-width="3.5"/></svg>`,
+    peach_gold: `<svg viewBox="0 0 100 100"><ellipse cx="44" cy="54" rx="22" ry="26" fill="#d97706"/><ellipse cx="56" cy="54" rx="22" ry="26" fill="#f59e0b"/></svg>`,
+    helmet_gold: `<svg viewBox="0 0 100 100"><path d="M28 54 C28 28 72 28 72 54 L68 80 H54 V62 H46 V80 H32 Z" fill="#eab308"/><path d="M36 22 Q50 10 66 26 L58 32 Q48 22 36 28 Z" fill="#ef4444"/></svg>`,
+    arm: `<svg viewBox="0 0 100 100"><path d="M26 76 H66 C74 76 76 62 66 58 L54 54 L60 32 C62 24 48 22 46 30 L38 56 C28 58 24 68 26 76 Z" fill="#f59e0b"/></svg>`,
+    bracelet: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="52" rx="30" ry="20" fill="none" stroke="#eab308" stroke-width="7"/></svg>`,
+    gpu: `<svg viewBox="0 0 100 100"><rect x="18" y="34" width="64" height="34" rx="6" fill="#334155"/><circle cx="38" cy="51" r="11" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/><circle cx="64" cy="51" r="11" fill="#0f172a" stroke="#c084fc" stroke-width="2"/></svg>`,
+    ion_gem: `<svg viewBox="0 0 100 100"><polygon points="50,18 68,42 60,78 40,78 32,42" fill="#f472b6"/></svg>`,
+    shard: `<svg viewBox="0 0 100 100"><polygon points="50,14 72,46 58,84 42,84 28,46" fill="#e2e8f0"/></svg>`,
+    perfume: `<svg viewBox="0 0 100 100"><rect x="30" y="32" width="40" height="48" rx="6" fill="#f43f5e"/><rect x="38" y="44" width="24" height="24" fill="#fff"/></svg>`,
+    oscar: `<svg viewBox="0 0 100 100"><circle cx="50" cy="24" r="7" fill="#cbd5e1"/><path d="M41 34 H59 L55 62 L57 76 H43 L45 62 Z" fill="#94a3b8"/></svg>`,
+    gem_ring: `<svg viewBox="0 0 100 100"><circle cx="50" cy="56" r="24" fill="none" stroke="#e2e8f0" stroke-width="8"/><polygon points="38,26 62,26 68,36 32,36" fill="#fff"/></svg>`,
+    westside: `<svg viewBox="0 0 100 100"><path d="M36 74 V42 L26 26 M46 68 V24 M56 68 V24 M66 74 V42 L76 32" stroke="#e2e8f0" stroke-width="8" stroke-linecap="round" fill="none"/></svg>`,
+    tongue: `<svg viewBox="0 0 100 100"><path d="M20 48 Q50 28 80 48 Q50 68 20 48 Z" fill="#34d399"/></svg>`,
+    voodoo: `<svg viewBox="0 0 100 100"><circle cx="50" cy="36" r="16" fill="#f8fafc"/><ellipse cx="50" cy="64" rx="14" ry="18" fill="#e2e8f0"/></svg>`,
+    bag: `<svg viewBox="0 0 100 100"><polygon points="26,36 74,36 78,80 22,80" fill="#10b981"/></svg>`,
+    lamp: `<svg viewBox="0 0 100 100"><path d="M22 54 C34 40 62 40 76 52 C68 68 38 70 22 54 Z" fill="#ec4899"/></svg>`,
+    watch: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="22" fill="#064e3b" stroke="#34d399" stroke-width="5"/></svg>`,
+    signet: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="52" rx="28" ry="22" fill="none" stroke="#f59e0b" stroke-width="10"/></svg>`,
+    neko: `<svg viewBox="0 0 100 100"><rect x="24" y="30" width="52" height="44" rx="22" fill="#f8fafc"/></svg>`,
+    cat: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="22" fill="#581c87"/></svg>`,
+    frog: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="58" rx="26" ry="20" fill="#fb7185"/></svg>`,
+    ring_box: `<svg viewBox="0 0 100 100"><rect x="28" y="24" width="44" height="52" rx="6" fill="#334155"/><circle cx="50" cy="52" r="11" fill="none" stroke="#38bdf8" stroke-width="4"/></svg>`,
+    ball: `<svg viewBox="0 0 100 100"><circle cx="50" cy="46" r="26" fill="#ef4444"/><circle cx="50" cy="46" r="12" fill="#fff"/></svg>`,
+    cupid: `<svg viewBox="0 0 100 100"><path d="M50 78 C50 78 22 60 22 40 C22 28 32 22 42 28 C46 31 50 36 50 36 C50 36 54 31 58 28 C68 22 78 28 78 40 C78 60 50 78 50 78 Z" fill="#f472b6"/></svg>`,
+    bear: `<svg viewBox="0 0 100 100"><circle cx="50" cy="38" r="16" fill="#2563eb"/><ellipse cx="50" cy="64" rx="18" ry="20" fill="#1d4ed8"/></svg>`,
+    papakha: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="44" rx="28" ry="22" fill="#f8fafc"/></svg>`,
+    globe: `<svg viewBox="0 0 100 100"><circle cx="50" cy="46" r="26" fill="rgba(186,230,253,.35)" stroke="#bae6fd" stroke-width="2.5"/></svg>`,
+    potion: `<svg viewBox="0 0 100 100"><path d="M36 32 H64 L74 56 C74 72 62 80 50 80 C38 80 26 72 26 56 Z" fill="#fbbf24"/></svg>`,
+    pumpkin: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="54" rx="28" ry="22" fill="#9a3412"/></svg>`,
+    mittens: `<svg viewBox="0 0 100 100"><rect x="24" y="34" width="22" height="32" rx="11" fill="#84cc16"/><rect x="54" y="34" width="22" height="32" rx="11" fill="#84cc16"/></svg>`,
+    tophat: `<svg viewBox="0 0 100 100"><rect x="32" y="24" width="36" height="40" rx="4" fill="#64748b"/><ellipse cx="50" cy="64" rx="34" ry="8" fill="#475569"/></svg>`,
+    cigar: `<svg viewBox="0 0 100 100"><rect x="22" y="44" width="56" height="16" rx="8" fill="#b91c1c" transform="rotate(-25 50 52)"/></svg>`,
+    player: `<svg viewBox="0 0 100 100"><rect x="24" y="38" width="52" height="36" rx="6" fill="#e2e8f0"/><circle cx="50" cy="56" r="13" fill="#0f172a"/></svg>`,
+    flower: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="24" fill="#c084fc"/><circle cx="50" cy="50" r="10" fill="#fff"/></svg>`,
+    dryer: `<svg viewBox="0 0 100 100"><rect x="28" y="28" width="42" height="22" rx="8" fill="#d97706"/></svg>`,
+    bundle: `<svg viewBox="0 0 100 100"><rect x="26" y="42" width="48" height="34" rx="6" fill="#d97706"/></svg>`,
+    santahat: `<svg viewBox="0 0 100 100"><path d="M26 62 Q48 20 74 52 L66 64 H26 Z" fill="#111827"/></svg>`,
+    ufc: `<svg viewBox="0 0 100 100"><rect x="32" y="24" width="36" height="44" rx="8" fill="#fb923c"/></svg>`
+  };
+  return map[type] || map.cup_gold;
+}
+
+function renderGiftArt(item, small = false) {
+  const svgFallback = encodeURIComponent(getGiftSvg(item.svgType));
+  return `
+    <div class="gift-art-box" style="background:${item.bg || 'linear-gradient(145deg,#2c1947,#160d24)'};${small ? 'aspect-ratio:1/1;max-width:130px;margin:0 auto 8px;' : ''}">
+      <div class="gift-art-pattern"></div>
+      <div class="gift-art-inner">
+        <img src="${escapeHtml(item.icon || '')}" alt="${escapeHtml(item.name)}"
+             onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,${svgFallback}';">
+      </div>
+    </div>`;
+}
+
+$('switchAuthMode').onclick = () => {
+  playSfx('click');
+  AUTH_MODE = AUTH_MODE === 'login' ? 'register' : 'login';
+  $('authTitle').textContent = AUTH_MODE === 'login' ? 'Вход в TagenGram' : 'Регистрация';
+  $('mainAuthBtn').textContent = AUTH_MODE === 'login' ? 'Войти' : 'Создать аккаунт';
+  $('authDisplayName').style.display = AUTH_MODE === 'register' ? 'block' : 'none';
 };
 
-// --- ЗАПУСК ВСЕГО ---
-// Не забудь, что в самом низу твоего скрипта уже есть вызов checkLogin(); и т.д.
+$('mainAuthBtn').onclick = async () => {
+  const login = $('authLogin').value.trim().replace(/^@/, '');
+  const password = $('authPassword').value;
+  const display_name = $('authDisplayName').value.trim();
+  if (!login || password.length < 6) {
+    playSfx('error');
+    return toast('Введите @username и пароль (от 6 симв.)', 'error');
+  }
+  try {
+    const res = await fetch(AUTH_MODE === 'login' ? '/api/login' : '/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ login, password, display_name })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    TOKEN = data.token;
+    localStorage.setItem('tg_token', TOKEN);
+    playSfx('gift');
+    bootApp();
+  } catch (e) {
+    playSfx('error');
+    toast(e.message, 'error');
+  }
+};
+
+function logout() {
+  playSfx('click');
+  localStorage.removeItem('tg_token');
+  location.reload();
+}
+
+async function bootApp() {
+  updateSoundBtn();
+  if (!TOKEN) return;
+  try {
+    const [meRes, catRes, usersRes] = await Promise.all([apiGet('/api/me'), fetch('/api/catalog'), apiGet('/api/users')]);
+    if (!meRes.ok) { localStorage.removeItem('tg_token'); return; }
+    ME = await meRes.json();
+    CATALOG = catRes.ok ? await catRes.json() : [];
+    USERS_CACHE = usersRes.ok ? await usersRes.json() : [];
+
+    $('authScreen').classList.remove('active');
+    $('topHeader').style.display = 'flex';
+    $('bottomNav').style.display = 'flex';
+    updateBalances();
+    switchTab('chats');
+
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(() => {
+      if (ACTIVE_CHAT_ID) loadRoomMessages(ACTIVE_CHAT_ID, false);
+      else if ($('screen-chats').classList.contains('active')) loadChats();
+    }, 3000);
+  } catch (e) {}
+}
+
+function updateBalances() {
+  if (!ME) return;
+  $('topTonVal').textContent = Number(ME.balance_ton || 0).toLocaleString('ru-RU');
+  $('topStarsVal').textContent = Number(ME.balance || 0).toLocaleString('ru-RU');
+  if ($('myStatTon')) $('myStatTon').textContent = Number(ME.balance_ton || 0).toLocaleString('ru-RU');
+  if ($('myStatStars')) $('myStatStars').textContent = Number(ME.balance || 0).toLocaleString('ru-RU');
+  if ($('myStatGifts')) $('myStatGifts').textContent = (ME.gifts || []).length;
+}
+
+function switchTab(tab) {
+  ACTIVE_CHAT_ID = null;
+  document.querySelectorAll('.page-screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  $('bottomNav').style.display = 'flex';
+  const sc = $(`screen-${tab}`);
+  if (sc) sc.classList.add('active');
+  const nav = document.querySelector(`.nav-item[data-tab="${tab}"]`);
+  if (nav) nav.classList.add('active');
+
+  if (tab === 'chats') loadChats();
+  if (tab === 'contacts') loadContacts();
+  if (tab === 'gifts') renderGiftsStore();
+  if (tab === 'profile') renderMyProfile();
+}
+
+async function loadChats() {
+  try {
+    const res = await apiGet('/api/chats');
+    const chats = res.ok ? await res.json() : [];
+    const box = $('chatsList');
+    if (!chats.length) {
+      box.innerHTML = '<div style="text-align:center;color:var(--dim);padding:40px;">Чатов пока нет. Откройте вкладку «Люди»!</div>';
+      return;
+    }
+    box.innerHTML = chats.map(c => {
+      const peer = c.peer;
+      const avatarHtml = peer && peer.avatar_url
+        ? `<img src="${escapeHtml(peer.avatar_url)}">`
+        : escapeHtml(c.type === 'group' ? (c.avatar_emoji || '❄️') : (c.title || 'U')[0].toUpperCase());
+      const onlineDot = peer && peer.is_online ? '<span class="online-dot"></span>' : '';
+      let preview = 'Нет сообщений';
+      if (c.last_message) {
+        preview = c.last_message.type === 'gift'
+          ? `🎁 Подарок: ${c.last_message.gift?.name || 'NFT'} ${c.last_message.gift?.serial || ''}`
+          : (c.last_message.type === 'image' ? '📷 Фотография' : c.last_message.text);
+      }
+      return `
+        <div class="chat-row" onclick="playSfx('click');openChatRoom('${escapeHtml(c.id)}', '${escapeHtml(c.title)}', ${peer ? `'${escapeHtml(peer.login)}'` : 'null'}, ${Boolean(peer && peer.is_online)})">
+          <div class="avatar-circle">${avatarHtml}${onlineDot}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <strong style="font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(c.title)}</strong>
+              ${c.unread > 0 ? `<span class="unread-badge">${c.unread}</span>` : ''}
+            </div>
+            <div style="font-size:12.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px;">${escapeHtml(preview)}</div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch (e) {}
+}
+
+async function openChatRoom(chatId, title, peerLogin, isOnline) {
+  ACTIVE_CHAT_ID = chatId;
+  ACTIVE_CHAT_PEER = peerLogin;
+  lastMsgCount = 0;
+  document.querySelectorAll('.page-screen').forEach(s => s.classList.remove('active'));
+  $('bottomNav').style.display = 'none';
+  $('screen-room').classList.add('active');
+  $('roomTitle').textContent = title;
+  $('roomSub').textContent = peerLogin ? (isOnline ? `в сети · @${peerLogin}` : `@${peerLogin}`) : 'общий чат · нажмите на ник для профиля';
+  $('roomSub').style.color = isOnline ? 'var(--ok)' : 'var(--dim)';
+  await loadRoomMessages(chatId, true);
+}
+
+function exitChatRoom() { switchTab('chats'); }
+
+async function loadRoomMessages(chatId, scrollBottom = false) {
+  if (ACTIVE_CHAT_ID !== chatId) return;
+  try {
+    const res = await apiGet(`/api/chats/${encodeURIComponent(chatId)}/messages`);
+    if (!res.ok) return;
+    const msgs = await res.json();
+    const box = $('roomMessages');
+    const wasAtBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 90;
+
+    if (!scrollBottom && lastMsgCount > 0 && msgs.length > lastMsgCount) {
+      const latest = msgs[msgs.length - 1];
+      if (latest && latest.sender !== ME.login) playSfx(latest.type === 'gift' ? 'gift' : 'recv');
+    }
+    lastMsgCount = msgs.length;
+
+    box.innerHTML = msgs.map(m => {
+      const mine = m.sender === ME.login;
+      const time = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const senderHeader = !mine ? `<div class="msg-sender" onclick="playSfx('click');openUserProfile('${escapeHtml(m.sender)}')">${escapeHtml(m.sender_name)} ${escapeHtml(m.sender_emoji || '')}</div>` : '';
+
+      if (m.type === 'gift' && m.gift) {
+        return `
+          <div class="msg-wrap ${mine ? 'mine' : 'other'}">
+            ${senderHeader}
+            <div class="chat-gift-card" onclick="playSfx('click');openUserProfile('${escapeHtml(m.gift_to || m.sender)}')">
+              <div class="chat-gift-badge">🎁 NFT ${escapeHtml(m.gift.serial || '')} · @${escapeHtml(m.gift_to || '')}</div>
+              ${renderGiftArt(m.gift, true)}
+              <div style="font-size:14.5px;font-weight:900;color:#fff;">${escapeHtml(m.gift.name)}</div>
+              <div style="font-size:11.5px;color:var(--dim);margin:4px 0;">${escapeHtml(m.text || '')}</div>
+              <div style="font-size:12px;font-weight:900;color:#f59e0b;">${m.gift.price_ton} TON</div>
+              <div class="msg-time">${time}</div>
+            </div>
+          </div>`;
+      }
+
+      return `
+        <div class="msg-wrap ${mine ? 'mine' : 'other'}">
+          ${senderHeader}
+          <div class="msg-bubble">
+            ${m.image ? `<img src="${escapeHtml(m.image)}" style="max-width:100%;border-radius:12px;margin-bottom:${m.text ? '6px' : '0'};display:block;">` : ''}
+            ${m.text ? `<div>${escapeHtml(m.text)}</div>` : ''}
+            <div class="msg-time">${time}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    if (scrollBottom || wasAtBottom) box.scrollTop = box.scrollHeight;
+  } catch (e) {}
+}
+
+async function sendChatText() {
+  const inp = $('chatMsgInput');
+  const text = inp.value.trim();
+  if (!text || !ACTIVE_CHAT_ID) return;
+  inp.value = '';
+  playSfx('send');
+  const res = await apiPost(`/api/chats/${encodeURIComponent(ACTIVE_CHAT_ID)}/send`, { text });
+  if (res.ok) loadRoomMessages(ACTIVE_CHAT_ID, true);
+}
+
+function sendChatImage(input) {
+  const file = input.files && input.files[0];
+  if (!file || !ACTIVE_CHAT_ID) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    playSfx('send');
+    const res = await apiPost(`/api/chats/${encodeURIComponent(ACTIVE_CHAT_ID)}/send`, { image: reader.result });
+    if (res.ok) loadRoomMessages(ACTIVE_CHAT_ID, true);
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function openSendGiftInChat() {
+  const toLogin = ACTIVE_CHAT_PEER || '';
+  const userOpts = USERS_CACHE.map(u => `<option value="${escapeHtml(u.login)}" ${u.login === toLogin ? 'selected' : ''}>${escapeHtml(u.display_name)} (@${escapeHtml(u.login)})</option>`).join('');
+  const giftOpts = CATALOG.map(g => `<option value="${escapeHtml(g.id)}">${escapeHtml(g.name)} — ${g.price_ton} TON</option>`).join('');
+
+  $('mainModalBody').innerHTML = `
+    <h3 style="color:var(--gold-bright);margin-bottom:12px;">🎁 Отправить подарок в чат</h3>
+    <label style="font-size:12px;color:var(--dim);">Кому:</label>
+    <select id="chatGiftTo" class="styled-select">${userOpts}</select>
+    <label style="font-size:12px;color:var(--dim);">Подарок:</label>
+    <select id="chatGiftId" class="styled-select">${giftOpts}</select>
+    <input type="text" id="chatGiftCaption" placeholder="Подпись к подарку...">
+    <div style="display:flex;gap:8px;">
+      <button class="btn-main btn-gold" onclick="confirmSendGiftFromChat('ton')">За TON</button>
+      <button class="btn-main" onclick="confirmSendGiftFromChat('stars')">За ★</button>
+    </div>
+    <button class="btn-grey" style="width:100%;margin-top:8px;" onclick="closeModal()">Отмена</button>`;
+  $('mainModal').classList.add('show');
+}
+
+async function confirmSendGiftFromChat(currency) {
+  const to = $('chatGiftTo').value;
+  const itemId = $('chatGiftId').value;
+  const caption = $('chatGiftCaption').value.trim();
+  try {
+    const res = await apiPost('/api/gifts/send', { itemId, currency, to, caption, chatId: ACTIVE_CHAT_ID });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    ME.balance_ton = data.balance_ton;
+    ME.balance = data.balance;
+    ME.gifts = data.gifts;
+    updateBalances();
+    closeModal();
+    playSfx('gift');
+    toast('Подарок отправлен в чат и добавлен в профиль!', 'success');
+    if (ACTIVE_CHAT_ID) loadRoomMessages(ACTIVE_CHAT_ID, true);
+  } catch (e) { playSfx('error'); toast(e.message, 'error'); }
+}
+
+async function loadContacts() {
+  const q = ($('usersSearchInput')?.value || '').trim();
+  const res = await apiGet(`/api/users?q=${encodeURIComponent(q)}`);
+  const users = res.ok ? await res.json() : [];
+  USERS_CACHE = users;
+  $('contactsList').innerHTML = users.map(u => {
+    const av = u.avatar_url ? `<img src="${escapeHtml(u.avatar_url)}">` : escapeHtml((u.display_name || u.login)[0].toUpperCase());
+    return `
+      <div class="chat-row" onclick="playSfx('click');openUserProfile('${escapeHtml(u.login)}')">
+        <div class="avatar-circle">${av}${u.is_online ? '<span class="online-dot"></span>' : ''}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:15px;font-weight:900;">${escapeHtml(u.display_name)} ${escapeHtml(u.status_emoji || '')}</div>
+          <div style="font-size:12px;color:var(--accent-bright);">@${escapeHtml(u.login)} · 🎁 Подарков: ${(u.gifts || []).length}</div>
+        </div>
+        <button class="btn-grey" onclick="event.stopPropagation();playSfx('click');startDmWith('${escapeHtml(u.login)}')">Чат</button>
+      </div>`;
+  }).join('');
+}
+
+async function startDmWith(login) {
+  const res = await apiPost('/api/chats/dm', { login });
+  const data = await res.json();
+  if (res.ok) {
+    const u = USERS_CACHE.find(x => x.login === login);
+    openChatRoom(data.chatId, u ? u.display_name : login, login, Boolean(u && u.is_online));
+  }
+}
+
+function openCurrentPeerProfile() {
+  if (ACTIVE_CHAT_PEER) openUserProfile(ACTIVE_CHAT_PEER);
+}
+
+async function openUserProfile(login) {
+  const res = await apiGet(`/api/users/${encodeURIComponent(login)}`);
+  if (!res.ok) return;
+  const u = await res.json();
+  const av = u.avatar_url ? `<img src="${escapeHtml(u.avatar_url)}">` : escapeHtml((u.display_name || u.login)[0].toUpperCase());
+  const gifts = u.gifts || [];
+  const giftsHtml = gifts.length
+    ? `<div class="gifts-grid" style="margin-top:10px;">${gifts.map(g => `
+        <div class="gift-card ${g.pinned ? 'pinned-card' : ''}" style="padding:8px;">
+          ${g.pinned ? '<span class="pin-badge">📌</span>' : ''}
+          ${renderGiftArt(g)}
+          <div class="gift-name" style="font-size:12.5px;">${escapeHtml(g.name)} <span style="color:var(--accent-bright);font-size:10.5px;">${escapeHtml(g.serial || '')}</span></div>
+          <div style="font-size:10.5px;color:var(--dim);">от @${escapeHtml(g.from || 'store')}</div>
+        </div>`).join('')}</div>`
+    : '<div style="color:var(--dim);font-size:12.5px;text-align:center;padding:16px;">Подарков пока нет</div>';
+
+  $('mainModalBody').innerHTML = `
+    <div style="border-radius:18px;overflow:hidden;background:rgba(10,5,20,.65);border:1px solid rgba(199,125,255,.35);margin-bottom:12px;">
+      <div style="height:64px;background:${escapeHtml(u.banner_gradient || 'linear-gradient(135deg,#3b1668,#190b2e)')};"></div>
+      <div style="padding:0 12px 14px;text-align:center;margin-top:-34px;">
+        <div class="avatar-circle" style="width:68px;height:68px;font-size:28px;margin:0 auto 6px;border:3px solid #160d24;">${av}</div>
+        <h2 style="font-size:19px;font-weight:900;">${escapeHtml(u.display_name)} ${escapeHtml(u.status_emoji || '')}</h2>
+        <div style="font-size:12px;color:var(--accent-bright);font-weight:800;">@${escapeHtml(u.login)} · ${u.is_online ? 'в сети' : 'не в сети'}</div>
+        <div style="font-size:12px;color:var(--dim);margin:7px 0 11px;">${escapeHtml(u.bio || '')}</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-main" onclick="playSfx('click');closeModal();startDmWith('${escapeHtml(u.login)}')">💬 Написать</button>
+          <button class="btn-main btn-gold" onclick="playSfx('click');closeModal();switchTab('gifts')">🎁 Подарить</button>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:12.5px;font-weight:900;color:var(--gold-bright);text-transform:uppercase;">🎁 Подарки в профиле (${gifts.length})</div>
+    ${giftsHtml}
+    <button class="btn-grey" style="width:100%;margin-top:12px;" onclick="closeModal()">Закрыть</button>`;
+  $('mainModal').classList.add('show');
+}
+
+function setGiftFilter(f, btn) {
+  playSfx('click');
+  GIFT_FILTER = f;
+  document.querySelectorAll('#giftsFilters .f-pill').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderGiftsStore();
+}
+
+function renderGiftsStore() {
+  const q = ($('giftsSearch').value || '').trim().toLowerCase();
+  const sort = $('giftsSort').value;
+  const favs = new Set(ME?.favorites || []);
+
+  let list = CATALOG.filter(it => {
+    if (q && !it.name.toLowerCase().includes(q)) return false;
+    if (GIFT_FILTER === 'fav') return favs.has(it.id);
+    if (GIFT_FILTER === 'NFT') return it.is_nft || it.tag === 'NFT';
+    if (GIFT_FILTER === 'Зима') return it.tag === 'Зима';
+    if (GIFT_FILTER === 'Редкий') return it.tag === 'Редкий';
+    return true;
+  });
+
+  if (sort === 'price_desc') list.sort((a, b) => b.price_ton - a.price_ton);
+  else if (sort === 'price_asc') list.sort((a, b) => a.price_ton - b.price_ton);
+  else list.sort((a, b) => (b.popular || 0) - (a.popular || 0));
+
+  $('giftsCount').textContent = `(${list.length})`;
+  $('giftsStoreGrid').innerHTML = list.map(it => `
+    <div class="gift-card" onclick="playSfx('click');openGiftBuyModal('${escapeHtml(it.id)}')">
+      ${renderGiftArt(it)}
+      <div class="gift-name">${escapeHtml(it.name)}</div>
+      <div><span class="rarity-pill ${escapeHtml(it.rarity)}">${escapeHtml(it.rarity)}</span></div>
+      <div class="gift-price-ton">${it.price_ton} TON</div>
+    </div>`).join('');
+}
+
+function openGiftBuyModal(itemId) {
+  const it = CATALOG.find(x => x.id === itemId);
+  if (!it) return;
+  const userOpts = USERS_CACHE.map(u => `<option value="${escapeHtml(u.login)}" ${u.login === ME.login ? 'selected' : ''}>${u.login === ME.login ? 'Себе в профиль' : `${escapeHtml(u.display_name)} (@${escapeHtml(u.login)})`}</option>`).join('');
+
+  $('mainModalBody').innerHTML = `
+    ${renderGiftArt(it)}
+    <h2 style="font-size:19px;font-weight:900;margin-bottom:8px;">${escapeHtml(it.name)}</h2>
+    <label style="font-size:12px;color:var(--dim);">Кому отправить подарок:</label>
+    <select id="buyGiftRecipient" class="styled-select">${userOpts}</select>
+    <input type="text" id="buyGiftCaption" placeholder="Подпись к подарку (необязательно)">
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="btn-main btn-gold" onclick="executeBuyGift('${escapeHtml(it.id)}','ton')">Отправить за ${it.price_ton} TON</button>
+      <button class="btn-main" onclick="executeBuyGift('${escapeHtml(it.id)}','stars')">Отправить за ${(it.price_stars || Math.round(it.price_ton * 100)).toLocaleString('ru-RU')} ★</button>
+      <button class="btn-grey" onclick="closeModal()">Закрыть</button>
+    </div>`;
+  $('mainModal').classList.add('show');
+}
+
+async function executeBuyGift(itemId, currency) {
+  const to = $('buyGiftRecipient').value;
+  const caption = $('buyGiftCaption').value.trim();
+  try {
+    const res = await apiPost('/api/gifts/send', { itemId, currency, to, caption });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    ME.balance_ton = data.balance_ton;
+    ME.balance = data.balance;
+    ME.gifts = data.gifts;
+    updateBalances();
+    closeModal();
+    playSfx('gift');
+    toast(to === ME.login ? 'Подарок добавлен в ваш профиль!' : `Подарок отправлен @${to}!`, 'success');
+  } catch (e) { playSfx('error'); toast(e.message, 'error'); }
+}
+
+function switchProfileSubtab(sub) {
+  const isGifts = sub === 'gifts';
+  $('profileSubtabGifts').style.display = isGifts ? 'block' : 'none';
+  $('profileSubtabWallet').style.display = isGifts ? 'none' : 'block';
+  $('profTabGiftsBtn').classList.toggle('active', isGifts);
+  $('profTabWalletBtn').classList.toggle('active', !isGifts);
+}
+
+function renderMyProfile() {
+  if (!ME) return;
+  if ($('myProfBanner')) $('myProfBanner').style.background = ME.banner_gradient || 'linear-gradient(135deg,#3b1668 0%,#190b2e 55%,#0e294b 100%)';
+  $('myProfAvatar').innerHTML = ME.avatar_url ? `<img src="${escapeHtml(ME.avatar_url)}">` : escapeHtml((ME.display_name || ME.login)[0].toUpperCase());
+  $('myProfName').textContent = ME.display_name || ME.login;
+  $('myProfEmoji').textContent = ME.status_emoji || '❄️';
+  $('myProfUsername').textContent = '@' + ME.login;
+  $('myProfBio').textContent = ME.bio || '';
+  $('btnOpenAdmin').style.display = (ME.is_admin || ME.is_super_admin) ? 'block' : 'none';
+  updateBalances();
+
+  const gifts = ME.gifts || [];
+  $('myProfileGiftsCount').textContent = gifts.length;
+  const grid = $('myProfileGiftsGrid');
+  if (!gifts.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--dim);padding:24px;">Подарков пока нет. Откройте витрину и добавьте коллекционные подарки!</div>';
+    return;
+  }
+  grid.innerHTML = gifts.map(g => `
+    <div class="gift-card ${g.pinned ? 'pinned-card' : ''}" onclick="playSfx('click');openOwnedGiftModal('${escapeHtml(g.uid)}')">
+      <span class="serial-badge">${escapeHtml(g.serial || '#NFT')}</span>
+      ${g.pinned ? '<span class="pin-badge">📌 Закреп</span>' : ''}
+      ${renderGiftArt(g)}
+      <div class="gift-name">${escapeHtml(g.name)}</div>
+      <div style="font-size:10.5px;color:var(--dim);">от @${escapeHtml(g.from || 'store')}</div>
+      <div class="gift-price-ton">${g.price_ton} TON</div>
+    </div>`).join('');
+}
+
+function openOwnedGiftModal(uid) {
+  const g = (ME.gifts || []).find(x => x.uid === uid);
+  if (!g) return;
+  const otherUsers = USERS_CACHE.filter(u => u.login !== ME.login);
+  const userOpts = otherUsers.map(u => `<option value="${escapeHtml(u.login)}">${escapeHtml(u.display_name)} (@${escapeHtml(u.login)})</option>`).join('');
+  const refund = Math.round((Number(g.price_ton) || 1) * 0.8 * 100) / 100;
+
+  $('mainModalBody').innerHTML = `
+    ${renderGiftArt(g)}
+    <h2 style="font-size:19px;font-weight:900;margin-bottom:2px;">${escapeHtml(g.name)} <span style="color:var(--accent-bright);font-size:14px;">${escapeHtml(g.serial || '')}</span></h2>
+    <div style="font-size:12px;color:var(--dim);margin-bottom:12px;">Отправитель: @${escapeHtml(g.from || 'store')} · «${escapeHtml(g.caption || '')}»</div>
+    <button class="btn-main" style="margin-bottom:8px;" onclick="togglePinGift('${escapeHtml(g.uid)}')">${g.pinned ? '📌 Открепить из топа профиля' : '📌 Закрепить в топе профиля'}</button>
+    ${otherUsers.length ? `
+      <div style="background:rgba(10,5,20,.65);padding:12px;border-radius:14px;border:1px solid rgba(199,125,255,.35);margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:800;color:var(--gold-bright);margin-bottom:6px;">🎁 Передарить другу</div>
+        <select id="transferToUser" class="styled-select">${userOpts}</select>
+        <input type="text" id="transferCaption" placeholder="Комментарий...">
+        <button class="btn-main btn-gold" onclick="transferOwnedGift('${escapeHtml(g.uid)}')">Передарить подарок</button>
+      </div>` : ''}
+    <button class="btn-main btn-green" style="margin-bottom:8px;" onclick="convertOwnedGift('${escapeHtml(g.uid)}')">Обменять на ${refund} TON</button>
+    <button class="btn-grey" style="width:100%;" onclick="closeModal()">Закрыть</button>`;
+  $('mainModal').classList.add('show');
+}
+
+async function togglePinGift(uid) {
+  const res = await apiPost('/api/gifts/pin', { uid });
+  const data = await res.json();
+  if (res.ok) {
+    ME.gifts = data.gifts;
+    playSfx('pin');
+    closeModal();
+    renderMyProfile();
+    toast(data.pinned ? 'Подарок закреплён в профиле!' : 'Подарок откреплён', 'success');
+  }
+}
+
+async function transferOwnedGift(uid) {
+  const to = $('transferToUser').value;
+  const caption = $('transferCaption').value.trim();
+  try {
+    const res = await apiPost('/api/gifts/transfer', { uid, to, caption });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    ME.gifts = data.gifts;
+    closeModal();
+    renderMyProfile();
+    playSfx('gift');
+    toast(`Подарок передан @${to}!`, 'success');
+  } catch (e) { playSfx('error'); toast(e.message, 'error'); }
+}
+
+async function convertOwnedGift(uid) {
+  try {
+    const res = await apiPost('/api/gifts/convert', { uid });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    ME.balance_ton = data.balance_ton;
+    ME.gifts = data.gifts;
+    updateBalances();
+    closeModal();
+    renderMyProfile();
+    playSfx('gift');
+    toast(`Получено +${data.gained_ton} TON`, 'success');
+  } catch (e) { playSfx('error'); toast(e.message, 'error'); }
+}
+
+function openEditProfileModal() {
+  const banners = [
+    { label: 'Неон-фиолет', val: 'linear-gradient(135deg,#3b1668 0%,#190b2e 55%,#0e294b 100%)' },
+    { label: 'Золотой закат', val: 'linear-gradient(135deg,#78350f 0%,#29122e 55%,#0f172a 100%)' },
+    { label: 'Изумруд и ночь', val: 'linear-gradient(135deg,#065f46 0%,#14102b 60%,#1e1b4b 100%)' }
+  ];
+  const bannerOpts = banners.map(b => `<option value="${escapeHtml(b.val)}" ${ME.banner_gradient === b.val ? 'selected' : ''}>${b.label}</option>`).join('');
+
+  $('mainModalBody').innerHTML = `
+    <h3 style="color:var(--gold-bright);margin-bottom:12px;">✏️ Редактировать профиль</h3>
+    <input type="text" id="editProfName" value="${escapeHtml(ME.display_name || '')}" placeholder="Имя">
+    <input type="text" id="editProfEmoji" value="${escapeHtml(ME.status_emoji || '❄️')}" placeholder="Эмодзи-статус">
+    <input type="text" id="editProfBio" value="${escapeHtml(ME.bio || '')}" placeholder="О себе">
+    <label style="font-size:12px;color:var(--dim);">Фон шапки профиля:</label>
+    <select id="editProfBanner" class="styled-select">${bannerOpts}</select>
+    <label class="btn-grey" style="display:block;text-align:center;margin-bottom:10px;">
+      🖼 Загрузить аватарку
+      <input type="file" accept="image/*" style="display:none;" onchange="handleAvatarUpload(this)">
+    </label>
+    <button class="btn-main btn-gold" onclick="saveProfileEdits()">Сохранить</button>
+    <button class="btn-grey" style="width:100%;margin-top:8px;" onclick="closeModal()">Отмена</button>`;
+  $('mainModal').classList.add('show');
+}
+
+let pendingAvatarDataUrl = null;
+function handleAvatarUpload(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => { pendingAvatarDataUrl = reader.result; playSfx('pin'); toast('Фото выбрано, нажмите Сохранить', 'success'); };
+  reader.readAsDataURL(file);
+}
+
+async function saveProfileEdits() {
+  const body = {
+    display_name: $('editProfName').value.trim(),
+    status_emoji: $('editProfEmoji').value.trim(),
+    bio: $('editProfBio').value.trim(),
+    banner_gradient: $('editProfBanner').value
+  };
+  if (pendingAvatarDataUrl !== null) body.avatar_url = pendingAvatarDataUrl;
+  const res = await apiPost('/api/profile/update', body);
+  if (res.ok) {
+    pendingAvatarDataUrl = null;
+    closeModal();
+    playSfx('gift');
+    await bootApp();
+    switchTab('profile');
+    toast('Профиль обновлён!', 'success');
+  }
+}
+
+async function exchangeStars() {
+  const stars = parseInt($('exStarsInput').value, 10) || 0;
+  try {
+    const res = await apiPost('/api/wallet/exchange', { stars });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    ME.balance = data.balance;
+    ME.balance_ton = data.balance_ton;
+    $('exStarsInput').value = '';
+    updateBalances();
+    playSfx('gift');
+    toast(`+${data.gained_ton} TON`, 'success');
+  } catch (e) { playSfx('error'); toast(e.message, 'error'); }
+}
+
+async function openAdminModal() {
+  playSfx('click');
+  const res = await apiGet('/api/admin/users');
+  if (!res.ok) return;
+  const users = await res.json();
+  const uOpts = users.map(u => `<option value="${escapeHtml(u.login)}">@${escapeHtml(u.login)} (${u.balance_ton} TON)</option>`).join('');
+  const gOpts = `<option value="">-- Без подарка --</option>` + CATALOG.map(g => `<option value="${escapeHtml(g.id)}">${escapeHtml(g.name)}</option>`).join('');
+  $('mainModalBody').innerHTML = `
+    <h3 style="color:var(--gold-bright);margin-bottom:12px;">🛡 Админ-панель</h3>
+    <select id="admTarget" class="styled-select">${uOpts}</select>
+    <input type="number" id="admTon" placeholder="Добавить TON (напр. 500)">
+    <input type="number" id="admStars" placeholder="Добавить ★ (напр. 10000)">
+    <select id="admGift" class="styled-select">${gOpts}</select>
+    <button class="btn-main btn-gold" onclick="submitAdminGive()">Выдать</button>
+    <button class="btn-grey" style="width:100%;margin-top:8px;" onclick="closeModal()">Закрыть</button>`;
+  $('mainModal').classList.add('show');
+}
+
+async function submitAdminGive() {
+  const res = await apiPost('/api/admin/give', {
+    target: $('admTarget').value,
+    ton: Number($('admTon').value) || 0,
+    stars: Number($('admStars').value) || 0,
+    giftId: $('admGift').value
+  });
+  if (res.ok) {
+    closeModal();
+    playSfx('gift');
+    toast('Выдано успешно!', 'success');
+    bootApp();
+  }
+}
+
+(function initSnow() {
+  const c = $('snowCanvas'), ctx = c.getContext('2d');
+  let w, h, flakes = [];
+  function resize() {
+    w = c.width = window.innerWidth; h = c.height = window.innerHeight;
+    flakes = Array.from({ length: 75 }, () => ({ x: Math.random() * w, y: Math.random() * h, r: Math.random() * 2.2 + 0.8, s: Math.random() * 0.65 + 0.3 }));
+  }
+  function loop() {
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = 'rgba(240,247,255,0.72)';
+    for (const f of flakes) {
+      ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill();
+      f.y += f.s; if (f.y > h) { f.y = -4; f.x = Math.random() * w; }
+    }
+    requestAnimationFrame(loop);
+  }
+  window.addEventListener('resize', resize);
+  resize(); loop();
+})();
+
+if (TOKEN) bootApp();
 </script>
 </body>
 </html>
