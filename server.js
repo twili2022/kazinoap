@@ -12,50 +12,50 @@ app.use(express.json({ limit: '12mb' }));
 app.use(express.static(PUBLIC_DIR));
 
 const GIFTS_CATALOG = [
-  { id: 'plush_pepe', name: 'Plush Pepe', rarity: 'Legendary', tag: 'NFT', is_nft: true, price_ton: 2500, price_stars: 250000, bg: 'linear-gradient(145deg,#3b2d18,#1f180d)', svgType: 'pepe', icon: '/items/plush_pepe.png', popular: 100 },
-  { id: 'algorithm_cup', name: 'Algorithm Cup', rarity: 'Legendary', tag: 'NFT', is_nft: true, price_ton: 1450, price_stars: 145000, bg: 'linear-gradient(145deg,#382c14,#1c160a)', svgType: 'cup_gold', icon: '/items/algorithm_cup.png', popular: 99 },
-  { id: 'intelligence_cup', name: 'Intelligence Cup', rarity: 'Legendary', tag: 'NFT', is_nft: true, price_ton: 1320, price_stars: 132000, bg: 'linear-gradient(145deg,#2e323b,#171a21)', svgType: 'cup_silver', icon: '/items/intelligence_cup.png', popular: 98 },
-  { id: 'heart_locket', name: 'Heart Locket', rarity: 'Legendary', tag: 'NFT', is_nft: true, price_ton: 890, price_stars: 89000, bg: 'linear-gradient(145deg,#521b2c,#290c15)', svgType: 'locket', icon: '/items/heart_locket.png', popular: 97 },
-  { id: 'resistance_dog', name: 'Resistance Dog', rarity: 'Legendary', tag: 'NFT', is_nft: true, price_ton: 640, price_stars: 64000, bg: 'linear-gradient(145deg,#291c3d,#140d21)', svgType: 'dog', icon: '/items/resistance_dog.png', popular: 96 },
-  { id: 'durovs_cap', name: "Durov's Cap", rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 455, price_stars: 45500, bg: 'linear-gradient(145deg,#1f3d26,#0e2113)', svgType: 'cap', icon: '/items/durovs_cap.png', popular: 95 },
-  { id: 'durovs_glasses', name: "Durov's Glasses", rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 380, price_stars: 38000, bg: 'linear-gradient(145deg,#173552,#0a1a2b)', svgType: 'glasses', icon: '/items/durovs_glasses.png', popular: 94 },
-  { id: 'precious_peach', name: 'Precious Peach', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 320, price_stars: 32000, bg: 'linear-gradient(145deg,#18364a,#0b1b26)', svgType: 'peach_gold', icon: '/items/precious_peach.png', popular: 93 },
-  { id: 'heroic_helmet', name: 'Heroic Helmet', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 210, price_stars: 21000, bg: 'linear-gradient(145deg,#292524,#141211)', svgType: 'helmet_gold', icon: '/items/heroic_helmet.png', popular: 92 },
-  { id: 'mighty_arm', name: 'Mighty Arm', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 175, price_stars: 17500, bg: 'linear-gradient(145deg,#1e3a5f,#0e1d33)', svgType: 'arm', icon: '/items/mighty_arm.png', popular: 91 },
-  { id: 'nail_bracelet', name: 'Nail Bracelet', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 145, price_stars: 14500, bg: 'linear-gradient(145deg,#1c3d29,#0d2115)', svgType: 'bracelet', icon: '/items/nail_bracelet.png', popular: 90 },
-  { id: 'artisan_brick', name: 'Artisan Brick', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 120, price_stars: 12000, bg: 'linear-gradient(145deg,#252847,#121426)', svgType: 'gpu', icon: '/items/artisan_brick.png', popular: 89 },
-  { id: 'ion_gem', name: 'Ion Gem', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 95, price_stars: 9500, bg: 'linear-gradient(145deg,#224227,#102413)', svgType: 'ion_gem', icon: '/items/ion_gem.png', popular: 88 },
-  { id: 'astral_shard', name: 'Astral Shard', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 89, price_stars: 8900, bg: 'linear-gradient(145deg,#2b2b2e,#141417)', svgType: 'shard', icon: '/items/astral_shard.png', popular: 87 },
-  { id: 'perfume_bottle', name: 'Perfume Bottle', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 85, price_stars: 8500, bg: 'linear-gradient(145deg,#473c1b,#241e0c)', svgType: 'perfume', icon: '/items/perfume_bottle.png', popular: 86 },
-  { id: 'mini_oscar', name: 'Mini Oscar', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 78, price_stars: 7800, bg: 'linear-gradient(145deg,#214226,#0f2112)', svgType: 'oscar', icon: '/items/mini_oscar.png', popular: 85 },
-  { id: 'gem_signet', name: 'Gem Signet', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 72, price_stars: 7200, bg: 'linear-gradient(145deg,#27325c,#121830)', svgType: 'gem_ring', icon: '/items/gem_signet.png', popular: 84 },
-  { id: 'westside_sign', name: 'Westside Sign', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 68, price_stars: 6800, bg: 'linear-gradient(145deg,#1d3d35,#0c1f1a)', svgType: 'westside', icon: '/items/westside_sign.png', popular: 83 },
-  { id: 'sharp_tongue', name: 'Sharp Tongue', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 52, price_stars: 5200, bg: 'linear-gradient(145deg,#3d2645,#1f1224)', svgType: 'tongue', icon: '/items/sharp_tongue.png', popular: 82 },
-  { id: 'voodoo_doll', name: 'Voodoo Doll', rarity: 'Rare', tag: 'NFT', is_nft: true, price_ton: 49, price_stars: 4900, bg: 'linear-gradient(145deg,#293d22,#131f0f)', svgType: 'voodoo', icon: '/items/voodoo_doll.png', popular: 81 },
-  { id: 'loot_bag', name: 'Loot Bag', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 44, price_stars: 4400, bg: 'linear-gradient(145deg,#282c59,#13152e)', svgType: 'bag', icon: '/items/loot_bag.png', popular: 80 },
-  { id: 'genie_lamp', name: 'Genie Lamp', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 39, price_stars: 3900, bg: 'linear-gradient(145deg,#1c3d29,#0d2115)', svgType: 'lamp', icon: '/items/genie_lamp.png', popular: 79 },
-  { id: 'swiss_watch', name: 'Swiss Watch', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 32, price_stars: 3200, bg: 'linear-gradient(145deg,#1c4230,#0c2117)', svgType: 'watch', icon: '/items/swiss_watch.png', popular: 78 },
-  { id: 'signet_ring', name: 'Signet Ring', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 28, price_stars: 2800, bg: 'linear-gradient(145deg,#472522,#241110)', svgType: 'signet', icon: '/items/signet_ring.png', popular: 77 },
-  { id: 'neko_helmet', name: 'Neko Helmet', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 27, price_stars: 2700, bg: 'linear-gradient(145deg,#47391c,#241c0d)', svgType: 'neko', icon: '/items/neko_helmet.png', popular: 76 },
-  { id: 'scared_cat', name: 'Scared Cat', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 25, price_stars: 2500, bg: 'linear-gradient(145deg,#253d22,#111f0f)', svgType: 'cat', icon: '/items/scared_cat.png', popular: 75 },
-  { id: 'kissed_frog', name: 'Kissed Frog', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 23, price_stars: 2300, bg: 'linear-gradient(145deg,#1d3b4d,#0d1c26)', svgType: 'frog', icon: '/items/kissed_frog.png', popular: 74 },
-  { id: 'diamond_ring', name: 'Diamond Ring', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 21, price_stars: 2100, bg: 'linear-gradient(145deg,#4a2724,#261311)', svgType: 'ring_box', icon: '/items/diamond_ring.png', popular: 73 },
-  { id: 'crystal_ball', name: 'Crystal Ball', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 19, price_stars: 1900, bg: 'linear-gradient(145deg,#4a3d19,#261f0b)', svgType: 'ball', icon: '/items/crystal_ball.png', popular: 72 },
-  { id: 'cupid_charm', name: 'Cupid Charm', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 18.5, price_stars: 1850, bg: 'linear-gradient(145deg,#4a2631,#261218)', svgType: 'cupid', icon: '/items/cupid_charm.png', popular: 71 },
-  { id: 'toy_bear', name: 'Toy Bear', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 18, price_stars: 1800, bg: 'linear-gradient(145deg,#1b4230,#0c2117)', svgType: 'bear', icon: '/items/toy_bear.png', popular: 70 },
-  { id: 'khabib_papakha', name: "Khabib's Papakha", rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 17.5, price_stars: 1750, bg: 'linear-gradient(145deg,#4d2819,#26130b)', svgType: 'papakha', icon: '/items/khabib_papakha.png', popular: 69 },
-  { id: 'snow_globe', name: 'Snow Globe', rarity: 'Rare', tag: 'Зима', is_nft: false, price_ton: 17, price_stars: 1700, bg: 'linear-gradient(145deg,#1b4531,#0c2418)', svgType: 'globe', icon: '/items/snow_globe.png', popular: 68 },
-  { id: 'love_potion', name: 'Love Potion', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 16.5, price_stars: 1650, bg: 'linear-gradient(145deg,#2a2b5c,#141530)', svgType: 'potion', icon: '/items/love_potion.png', popular: 67 },
-  { id: 'mad_pumpkin', name: 'Mad Pumpkin', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 16, price_stars: 1600, bg: 'linear-gradient(145deg,#4a2822,#261310)', svgType: 'pumpkin', icon: '/items/mad_pumpkin.png', popular: 66 },
-  { id: 'snow_mittens', name: 'Snow Mittens', rarity: 'Rare', tag: 'Зима', is_nft: false, price_ton: 15.5, price_stars: 1550, bg: 'linear-gradient(145deg,#323633,#181a19)', svgType: 'mittens', icon: '/items/snow_mittens.png', popular: 65 },
-  { id: 'top_hat', name: 'Top Hat', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 15, price_stars: 1500, bg: 'linear-gradient(145deg,#223342,#101921)', svgType: 'tophat', icon: '/items/top_hat.png', popular: 64 },
-  { id: 'vintage_cigar', name: 'Vintage Cigar', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 14.5, price_stars: 1450, bg: 'linear-gradient(145deg,#23294a,#101326)', svgType: 'cigar', icon: '/items/vintage_cigar.png', popular: 63 },
-  { id: 'record_player', name: 'Record Player', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 11, price_stars: 1100, bg: 'linear-gradient(145deg,#422629,#211214)', svgType: 'player', icon: '/items/record_player.png', popular: 62 },
-  { id: 'skull_flower', name: 'Skull Flower', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 10.5, price_stars: 1050, bg: 'linear-gradient(145deg,#263354,#121829)', svgType: 'flower', icon: '/items/skull_flower.png', popular: 61 },
-  { id: 'ionic_dryer', name: 'Ionic Dryer', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 10.2, price_stars: 1020, bg: 'linear-gradient(145deg,#3d3322,#1f1910)', svgType: 'dryer', icon: '/items/ionic_dryer.png', popular: 60 },
-  { id: 'joyful_bundle', name: 'Joyful Bundle', rarity: 'Rare', tag: 'Зима', is_nft: false, price_ton: 10, price_stars: 1000, bg: 'linear-gradient(145deg,#472834,#24131a)', svgType: 'bundle', icon: '/items/joyful_bundle.png', popular: 59 },
-  { id: 'santa_hat', name: 'Santa Hat', rarity: 'Rare', tag: 'Зима', is_nft: false, price_ton: 9.5, price_stars: 950, bg: 'linear-gradient(145deg,#2d4222,#15210f)', svgType: 'santahat', icon: '/items/santa_hat.png', popular: 58 },
-  { id: 'ufc_strike', name: 'UFC Strike', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 9.4, price_stars: 940, bg: 'linear-gradient(145deg,#40243d,#21111f)', svgType: 'ufc', icon: '/items/ufc_strike.png', popular: 57 }
+  { id: 'plush_pepe', name: 'Plush Pepe', rarity: 'Legendary', tag: 'NFT', is_nft: true, price_ton: 2500, price_stars: 250000, bg: 'linear-gradient(145deg,#3b2d18,#1f180d)', svgType: 'pepe', popular: 100 },
+  { id: 'algorithm_cup', name: 'Algorithm Cup', rarity: 'Legendary', tag: 'NFT', is_nft: true, price_ton: 1450, price_stars: 145000, bg: 'linear-gradient(145deg,#382c14,#1c160a)', svgType: 'cup_gold', popular: 99 },
+  { id: 'intelligence_cup', name: 'Intelligence Cup', rarity: 'Legendary', tag: 'NFT', is_nft: true, price_ton: 1320, price_stars: 132000, bg: 'linear-gradient(145deg,#2e323b,#171a21)', svgType: 'cup_silver', popular: 98 },
+  { id: 'heart_locket', name: 'Heart Locket', rarity: 'Legendary', tag: 'NFT', is_nft: true, price_ton: 890, price_stars: 89000, bg: 'linear-gradient(145deg,#521b2c,#290c15)', svgType: 'locket', popular: 97 },
+  { id: 'resistance_dog', name: 'Resistance Dog', rarity: 'Legendary', tag: 'NFT', is_nft: true, price_ton: 640, price_stars: 64000, bg: 'linear-gradient(145deg,#291c3d,#140d21)', svgType: 'dog', popular: 96 },
+  { id: 'durovs_cap', name: "Durov's Cap", rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 455, price_stars: 45500, bg: 'linear-gradient(145deg,#1f3d26,#0e2113)', svgType: 'cap', popular: 95 },
+  { id: 'durovs_glasses', name: "Durov's Glasses", rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 380, price_stars: 38000, bg: 'linear-gradient(145deg,#173552,#0a1a2b)', svgType: 'glasses', popular: 94 },
+  { id: 'precious_peach', name: 'Precious Peach', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 320, price_stars: 32000, bg: 'linear-gradient(145deg,#18364a,#0b1b26)', svgType: 'peach_gold', popular: 93 },
+  { id: 'heroic_helmet', name: 'Heroic Helmet', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 210, price_stars: 21000, bg: 'linear-gradient(145deg,#292524,#141211)', svgType: 'helmet_gold', popular: 92 },
+  { id: 'mighty_arm', name: 'Mighty Arm', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 175, price_stars: 17500, bg: 'linear-gradient(145deg,#1e3a5f,#0e1d33)', svgType: 'arm', popular: 91 },
+  { id: 'nail_bracelet', name: 'Nail Bracelet', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 145, price_stars: 14500, bg: 'linear-gradient(145deg,#1c3d29,#0d2115)', svgType: 'bracelet', popular: 90 },
+  { id: 'artisan_brick', name: 'Artisan Brick', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 120, price_stars: 12000, bg: 'linear-gradient(145deg,#252847,#121426)', svgType: 'gpu', popular: 89 },
+  { id: 'ion_gem', name: 'Ion Gem', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 95, price_stars: 9500, bg: 'linear-gradient(145deg,#224227,#102413)', svgType: 'ion_gem', popular: 88 },
+  { id: 'astral_shard', name: 'Astral Shard', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 89, price_stars: 8900, bg: 'linear-gradient(145deg,#2b2b2e,#141417)', svgType: 'shard', popular: 87 },
+  { id: 'perfume_bottle', name: 'Perfume Bottle', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 85, price_stars: 8500, bg: 'linear-gradient(145deg,#473c1b,#241e0c)', svgType: 'perfume', popular: 86 },
+  { id: 'mini_oscar', name: 'Mini Oscar', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 78, price_stars: 7800, bg: 'linear-gradient(145deg,#214226,#0f2112)', svgType: 'oscar', popular: 85 },
+  { id: 'gem_signet', name: 'Gem Signet', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 72, price_stars: 7200, bg: 'linear-gradient(145deg,#27325c,#121830)', svgType: 'gem_ring', popular: 84 },
+  { id: 'westside_sign', name: 'Westside Sign', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 68, price_stars: 6800, bg: 'linear-gradient(145deg,#1d3d35,#0c1f1a)', svgType: 'westside', popular: 83 },
+  { id: 'sharp_tongue', name: 'Sharp Tongue', rarity: 'Epic', tag: 'NFT', is_nft: true, price_ton: 52, price_stars: 5200, bg: 'linear-gradient(145deg,#3d2645,#1f1224)', svgType: 'tongue', popular: 82 },
+  { id: 'voodoo_doll', name: 'Voodoo Doll', rarity: 'Rare', tag: 'NFT', is_nft: true, price_ton: 49, price_stars: 4900, bg: 'linear-gradient(145deg,#293d22,#131f0f)', svgType: 'voodoo', popular: 81 },
+  { id: 'loot_bag', name: 'Loot Bag', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 44, price_stars: 4400, bg: 'linear-gradient(145deg,#282c59,#13152e)', svgType: 'bag', popular: 80 },
+  { id: 'genie_lamp', name: 'Genie Lamp', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 39, price_stars: 3900, bg: 'linear-gradient(145deg,#1c3d29,#0d2115)', svgType: 'lamp', popular: 79 },
+  { id: 'swiss_watch', name: 'Swiss Watch', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 32, price_stars: 3200, bg: 'linear-gradient(145deg,#1c4230,#0c2117)', svgType: 'watch', popular: 78 },
+  { id: 'signet_ring', name: 'Signet Ring', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 28, price_stars: 2800, bg: 'linear-gradient(145deg,#472522,#241110)', svgType: 'signet', popular: 77 },
+  { id: 'neko_helmet', name: 'Neko Helmet', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 27, price_stars: 2700, bg: 'linear-gradient(145deg,#47391c,#241c0d)', svgType: 'neko', popular: 76 },
+  { id: 'scared_cat', name: 'Scared Cat', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 25, price_stars: 2500, bg: 'linear-gradient(145deg,#253d22,#111f0f)', svgType: 'cat', popular: 75 },
+  { id: 'kissed_frog', name: 'Kissed Frog', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 23, price_stars: 2300, bg: 'linear-gradient(145deg,#1d3b4d,#0d1c26)', svgType: 'frog', popular: 74 },
+  { id: 'diamond_ring', name: 'Diamond Ring', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 21, price_stars: 2100, bg: 'linear-gradient(145deg,#4a2724,#261311)', svgType: 'ring_box', popular: 73 },
+  { id: 'crystal_ball', name: 'Crystal Ball', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 19, price_stars: 1900, bg: 'linear-gradient(145deg,#4a3d19,#261f0b)', svgType: 'ball', popular: 72 },
+  { id: 'cupid_charm', name: 'Cupid Charm', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 18.5, price_stars: 1850, bg: 'linear-gradient(145deg,#4a2631,#261218)', svgType: 'cupid', popular: 71 },
+  { id: 'toy_bear', name: 'Toy Bear', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 18, price_stars: 1800, bg: 'linear-gradient(145deg,#1b4230,#0c2117)', svgType: 'bear', popular: 70 },
+  { id: 'khabib_papakha', name: "Khabib's Papakha", rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 17.5, price_stars: 1750, bg: 'linear-gradient(145deg,#4d2819,#26130b)', svgType: 'papakha', popular: 69 },
+  { id: 'snow_globe', name: 'Snow Globe', rarity: 'Rare', tag: 'Зима', is_nft: false, price_ton: 17, price_stars: 1700, bg: 'linear-gradient(145deg,#1b4531,#0c2418)', svgType: 'globe', popular: 68 },
+  { id: 'love_potion', name: 'Love Potion', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 16.5, price_stars: 1650, bg: 'linear-gradient(145deg,#2a2b5c,#141530)', svgType: 'potion', popular: 67 },
+  { id: 'mad_pumpkin', name: 'Mad Pumpkin', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 16, price_stars: 1600, bg: 'linear-gradient(145deg,#4a2822,#261310)', svgType: 'pumpkin', popular: 66 },
+  { id: 'snow_mittens', name: 'Snow Mittens', rarity: 'Rare', tag: 'Зима', is_nft: false, price_ton: 15.5, price_stars: 1550, bg: 'linear-gradient(145deg,#323633,#181a19)', svgType: 'mittens', popular: 65 },
+  { id: 'top_hat', name: 'Top Hat', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 15, price_stars: 1500, bg: 'linear-gradient(145deg,#223342,#101921)', svgType: 'tophat', popular: 64 },
+  { id: 'vintage_cigar', name: 'Vintage Cigar', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 14.5, price_stars: 1450, bg: 'linear-gradient(145deg,#23294a,#101326)', svgType: 'cigar', popular: 63 },
+  { id: 'record_player', name: 'Record Player', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 11, price_stars: 1100, bg: 'linear-gradient(145deg,#422629,#211214)', svgType: 'player', popular: 62 },
+  { id: 'skull_flower', name: 'Skull Flower', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 10.5, price_stars: 1050, bg: 'linear-gradient(145deg,#263354,#121829)', svgType: 'flower', popular: 61 },
+  { id: 'ionic_dryer', name: 'Ionic Dryer', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 10.2, price_stars: 1020, bg: 'linear-gradient(145deg,#3d3322,#1f1910)', svgType: 'dryer', popular: 60 },
+  { id: 'joyful_bundle', name: 'Joyful Bundle', rarity: 'Rare', tag: 'Зима', is_nft: false, price_ton: 10, price_stars: 1000, bg: 'linear-gradient(145deg,#472834,#24131a)', svgType: 'bundle', popular: 59 },
+  { id: 'santa_hat', name: 'Santa Hat', rarity: 'Rare', tag: 'Зима', is_nft: false, price_ton: 9.5, price_stars: 950, bg: 'linear-gradient(145deg,#2d4222,#15210f)', svgType: 'santahat', popular: 58 },
+  { id: 'ufc_strike', name: 'UFC Strike', rarity: 'Rare', tag: 'Редкий', is_nft: false, price_ton: 9.4, price_stars: 940, bg: 'linear-gradient(145deg,#40243d,#21111f)', svgType: 'ufc', popular: 57 }
 ];
 
 function hashPassword(password, salt) {
@@ -118,8 +118,8 @@ function createInitialDB() {
     sessions: {},
     catalog: GIFTS_CATALOG.slice(),
     chats: [
-      { id: 'global_chat', type: 'group', title: '❄️ TagenGram Общий чат', avatar_emoji: '❄️', members: ['tagen', 'tgweb', 'admin'], updated_at: now },
-      { id: 'dm_tagen_tgweb', type: 'dm', members: ['tagen', 'tgweb'], updated_at: now - 60000 }
+      { id: 'global_chat', type: 'group', title: '❄️ TagenGram Общий чат', avatar_emoji: '❄️', members: ['tagen', 'tgweb', 'admin'], pinned_msg_id: null, updated_at: now },
+      { id: 'dm_tagen_tgweb', type: 'dm', members: ['tagen', 'tgweb'], pinned_msg_id: null, updated_at: now - 60000 }
     ],
     messages: [
       {
@@ -127,7 +127,9 @@ function createInitialDB() {
         chat_id: 'global_chat',
         sender: 'tagen',
         type: 'text',
-        text: 'Добро пожаловать в обновлённый TagenGram! Звуки включены, подарки в профиле работают как в Telegram — можно закреплять, передаривать и менять на TON ❄️🎁',
+        text: 'Добро пожаловать в TagenGram! Свайпни влево по сообщению для ответа или дважды тапни для реакций и меню ❄️🎁',
+        reply_to: null,
+        reactions: { '🔥': ['tagen', 'tgweb'] },
         created_at: now - 300000,
         read_by: ['tagen', 'tgweb', 'admin']
       },
@@ -139,6 +141,8 @@ function createInitialDB() {
         text: 'Отправил Plush Pepe #0001!',
         gift: { ...GIFTS_CATALOG[0], uid: 'msg_gift_1', serial: '#0001' },
         gift_to: 'tagen',
+        reply_to: null,
+        reactions: { '❤️': ['tagen'] },
         created_at: now - 120000,
         read_by: ['tagen', 'tgweb']
       }
@@ -159,13 +163,13 @@ function readDB() {
     const db = {
       users: parsed.users || {},
       sessions: parsed.sessions || {},
-      catalog: Array.isArray(parsed.catalog) && parsed.catalog.length ? parsed.catalog : GIFTS_CATALOG.slice(),
+      catalog: GIFTS_CATALOG.slice(),
       chats: Array.isArray(parsed.chats) ? parsed.chats : [],
       messages: Array.isArray(parsed.messages) ? parsed.messages : [],
       logs: Array.isArray(parsed.logs) ? parsed.logs : []
     };
     if (!db.chats.find(c => c.id === 'global_chat')) {
-      db.chats.unshift({ id: 'global_chat', type: 'group', title: '❄️ TagenGram Общий чат', avatar_emoji: '❄️', members: Object.keys(db.users), updated_at: Date.now() });
+      db.chats.unshift({ id: 'global_chat', type: 'group', title: '❄️ TagenGram Общий чат', avatar_emoji: '❄️', members: Object.keys(db.users), pinned_msg_id: null, updated_at: Date.now() });
     }
     return db;
   } catch (err) {
@@ -307,7 +311,7 @@ app.get('/api/chats', requireAuth, (req, res) => {
   const userChats = req.db.chats
     .filter(c => c.type === 'group' || (Array.isArray(c.members) && c.members.includes(me)))
     .map(c => {
-      const msgs = req.db.messages.filter(m => m.chat_id === c.id);
+      const msgs = req.db.messages.filter(m => m.chat_id === c.id && !m.deleted);
       const lastMsg = msgs[msgs.length - 1] || null;
       const unread = msgs.filter(m => m.sender !== me && (!Array.isArray(m.read_by) || !m.read_by.includes(me))).length;
 
@@ -350,7 +354,7 @@ app.post('/api/chats/dm', requireAuth, (req, res) => {
   );
 
   if (!chat) {
-    chat = { id: `dm_${[me, targetLogin].sort().join('_')}_${Date.now()}`, type: 'dm', members: [me, targetLogin], updated_at: Date.now() };
+    chat = { id: `dm_${[me, targetLogin].sort().join('_')}_${Date.now()}`, type: 'dm', members: [me, targetLogin], pinned_msg_id: null, updated_at: Date.now() };
     req.db.chats.push(chat);
     writeDB(req.db);
   }
@@ -365,8 +369,9 @@ app.get('/api/chats/:chatId/messages', requireAuth, (req, res) => {
   if (chat.type === 'dm' && !chat.members.includes(me)) return res.status(403).json({ error: 'Нет доступа к чату' });
 
   let changed = false;
-  const msgs = req.db.messages
-    .filter(m => m.chat_id === chatId)
+  const chatMsgs = req.db.messages.filter(m => m.chat_id === chatId);
+  const msgs = chatMsgs
+    .filter(m => !m.deleted)
     .map(m => {
       if (!Array.isArray(m.read_by)) m.read_by = [];
       if (!m.read_by.includes(me)) {
@@ -376,14 +381,24 @@ app.get('/api/chats/:chatId/messages', requireAuth, (req, res) => {
       const senderUser = req.db.users[m.sender];
       return {
         ...m,
+        reactions: m.reactions || {},
+        reply_to: m.reply_to || null,
         sender_name: senderUser ? (senderUser.display_name || senderUser.login) : m.sender,
         sender_emoji: senderUser ? (senderUser.status_emoji || '❄️') : '❄️',
         sender_avatar: senderUser ? (senderUser.avatar_url || '') : ''
       };
     });
 
+  const pinnedMsg = chat.pinned_msg_id ? chatMsgs.find(m => m.id === chat.pinned_msg_id && !m.deleted) : null;
   if (changed) writeDB(req.db);
-  return res.json(msgs.slice(-150));
+  return res.json({
+    messages: msgs.slice(-150),
+    pinned_message: pinnedMsg ? {
+      id: pinnedMsg.id,
+      sender_name: req.db.users[pinnedMsg.sender]?.display_name || pinnedMsg.sender,
+      text: pinnedMsg.type === 'gift' ? `🎁 ${pinnedMsg.gift?.name || 'Подарок'}` : (pinnedMsg.text || '📷 Фотография')
+    } : null
+  });
 });
 
 app.post('/api/chats/:chatId/send', requireAuth, (req, res) => {
@@ -395,15 +410,24 @@ app.post('/api/chats/:chatId/send', requireAuth, (req, res) => {
 
   const text = String(req.body?.text || '').trim();
   const image = String(req.body?.image || '').trim();
+  const replyTo = req.body?.reply_to && typeof req.body.reply_to === 'object' ? {
+    id: String(req.body.reply_to.id || ''),
+    sender_name: String(req.body.reply_to.sender_name || '').slice(0, 40),
+    text: String(req.body.reply_to.text || '').slice(0, 120)
+  } : null;
+
   if (!text && !image) return res.status(400).json({ error: 'Пустое сообщение' });
 
   const msg = {
-    id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    id: String(req.body?.client_id || `msg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`),
     chat_id: chatId,
     sender: me,
     type: image ? 'image' : 'text',
     text: text.slice(0, 2000),
     image: image.startsWith('data:image/') ? image : '',
+    reply_to: replyTo,
+    reactions: {},
+    deleted: false,
     created_at: Date.now(),
     read_by: [me]
   };
@@ -414,9 +438,49 @@ app.post('/api/chats/:chatId/send', requireAuth, (req, res) => {
   return res.json({ ok: true, message: msg });
 });
 
+app.post('/api/chats/:chatId/messages/:msgId/react', requireAuth, (req, res) => {
+  const emoji = String(req.body?.emoji || '').trim();
+  const allowed = ['❤️', '👍', '👎', '🔥', '👌', '🥰', '😭'];
+  if (!allowed.includes(emoji)) return res.status(400).json({ error: 'Неподдерживаемая реакция' });
+  const msg = req.db.messages.find(m => m.chat_id === req.params.chatId && m.id === req.params.msgId && !m.deleted);
+  if (!msg) return res.status(404).json({ error: 'Сообщение не найдено' });
+
+  if (!msg.reactions || typeof msg.reactions !== 'object') msg.reactions = {};
+  const me = req.user.login;
+
+  for (const key of Object.keys(msg.reactions)) {
+    msg.reactions[key] = (msg.reactions[key] || []).filter(u => u !== me);
+    if (!msg.reactions[key].length) delete msg.reactions[key];
+  }
+  if (!req.body?.remove_only) {
+    if (!msg.reactions[emoji]) msg.reactions[emoji] = [];
+    if (!msg.reactions[emoji].includes(me)) msg.reactions[emoji].push(me);
+  }
+  writeDB(req.db);
+  return res.json({ ok: true, reactions: msg.reactions });
+});
+
+app.post('/api/chats/:chatId/messages/:msgId/pin', requireAuth, (req, res) => {
+  const chat = req.db.chats.find(c => c.id === req.params.chatId);
+  if (!chat) return res.status(404).json({ error: 'Чат не найден' });
+  chat.pinned_msg_id = chat.pinned_msg_id === req.params.msgId ? null : req.params.msgId;
+  writeDB(req.db);
+  return res.json({ ok: true, pinned_msg_id: chat.pinned_msg_id });
+});
+
+app.delete('/api/chats/:chatId/messages/:msgId', requireAuth, (req, res) => {
+  const msg = req.db.messages.find(m => m.chat_id === req.params.chatId && m.id === req.params.msgId);
+  if (!msg) return res.status(404).json({ error: 'Сообщение не найдено' });
+  if (msg.sender !== req.user.login && !req.user.is_admin && !req.user.is_super_admin) {
+    return res.status(403).json({ error: 'Можно удалять только свои сообщения' });
+  }
+  msg.deleted = true;
+  writeDB(req.db);
+  return res.json({ ok: true });
+});
+
 app.get('/api/catalog', (req, res) => {
-  const db = readDB();
-  return res.json(db.catalog);
+  return res.json(GIFTS_CATALOG);
 });
 
 app.post('/api/gifts/send', requireAuth, (req, res) => {
@@ -427,7 +491,7 @@ app.post('/api/gifts/send', requireAuth, (req, res) => {
     const caption = String(req.body?.caption || '').trim().slice(0, 120);
     const chatId = String(req.body?.chatId || '').trim();
 
-    const baseItem = req.db.catalog.find(it => String(it.id) === itemId);
+    const baseItem = GIFTS_CATALOG.find(it => String(it.id) === itemId);
     if (!baseItem) return res.status(404).json({ error: 'Подарок не найден' });
 
     const recipient = req.db.users[recipientLogin];
@@ -463,7 +527,7 @@ app.post('/api/gifts/send', requireAuth, (req, res) => {
         c.type === 'dm' && c.members.includes(req.user.login) && c.members.includes(recipient.login) && c.members.length === 2
       );
       if (!targetChat) {
-        targetChat = { id: `dm_${[req.user.login, recipient.login].sort().join('_')}_${Date.now()}`, type: 'dm', members: [req.user.login, recipient.login], updated_at: Date.now() };
+        targetChat = { id: `dm_${[req.user.login, recipient.login].sort().join('_')}_${Date.now()}`, type: 'dm', members: [req.user.login, recipient.login], pinned_msg_id: null, updated_at: Date.now() };
         req.db.chats.push(targetChat);
       }
     }
@@ -477,6 +541,7 @@ app.post('/api/gifts/send', requireAuth, (req, res) => {
         text: caption || `Подарил(а) ${baseItem.name} ${giftObj.serial}`,
         gift: giftObj,
         gift_to: recipient.login,
+        reactions: {},
         created_at: Date.now(),
         read_by: [req.user.login]
       });
@@ -531,7 +596,7 @@ app.post('/api/gifts/transfer', requireAuth, (req, res) => {
     c.type === 'dm' && c.members.includes(req.user.login) && c.members.includes(recipient.login) && c.members.length === 2
   );
   if (!dm) {
-    dm = { id: `dm_${[req.user.login, recipient.login].sort().join('_')}_${Date.now()}`, type: 'dm', members: [req.user.login, recipient.login], updated_at: Date.now() };
+    dm = { id: `dm_${[req.user.login, recipient.login].sort().join('_')}_${Date.now()}`, type: 'dm', members: [req.user.login, recipient.login], pinned_msg_id: null, updated_at: Date.now() };
     req.db.chats.push(dm);
   }
   req.db.messages.push({
@@ -542,6 +607,7 @@ app.post('/api/gifts/transfer', requireAuth, (req, res) => {
     text: gift.caption,
     gift,
     gift_to: recipient.login,
+    reactions: {},
     created_at: Date.now(),
     read_by: [req.user.login]
   });
@@ -595,7 +661,7 @@ app.post('/api/admin/give', requireAuth, (req, res) => {
   if (ton) target.balance_ton = Math.max(0, roundTon((target.balance_ton || 0) + ton));
   if (stars) target.balance = Math.max(0, (Number(target.balance) || 0) + stars);
   if (giftId) {
-    const base = req.db.catalog.find(g => g.id === giftId);
+    const base = GIFTS_CATALOG.find(g => g.id === giftId);
     if (base) {
       target.gifts.unshift({ ...base, uid: `gift_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, serial: makeSerial(), from: req.user.login, caption: 'Подарок от Администрации ❄️', pinned: true, received_at: Date.now() });
     }
